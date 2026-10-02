@@ -99,6 +99,11 @@ Configs: {
 	DynamicWorldsConfig: {
 		DisplayName: Dynamic Worlds
 
+		AnchorTileCapOverride: {
+			Label: Anchor Tile Cap Override
+			Tooltip: "Maximum individually anchored tiles. 0 uses boss progression. Lowering this limit keeps existing anchors but prevents additions until usage falls below it. Server config changes require a trusted player."
+		}
+
 		EnableRegenCounter: {
 			Label: Enable Scheduled Regen
 			Tooltip: Enable or pause the automatic world regeneration scheduler

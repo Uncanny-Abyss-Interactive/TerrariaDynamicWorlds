@@ -190,6 +190,7 @@ Rules and limits:
 
 - Tiles inside a structure zone cannot also be individually anchored.
 - The anchor cap scales with progression from 5,000 to 100,000 tiles.
+- `Anchor Tile Cap Override` in the server config can set a fixed limit from 1 to 1,000,000. Its default, 0, keeps progression limits. Lowering it preserves existing anchors and still permits removal; new additions wait until there is capacity. Only trusted players can change server config in multiplayer.
 - Inventory right-click restore is gated by `Allow Cheats`.
 
 Good use cases:

@@ -134,6 +134,8 @@ public sealed class ServerValidationSystem : ModSystem
 
         foreach (var check in PacketDirectionChecks.ServerChecks())
             Check(check.Key, check.Value, "Production packet receive-direction regression.");
+        foreach (var check in AnchorCapChecks.ServerChecks())
+            Check(check.Key, check.Value, "Anchor cap configuration and admission regression.");
 
         // Use actual Terraria globals and the production capture/apply implementation.
         Main.hardMode = false;

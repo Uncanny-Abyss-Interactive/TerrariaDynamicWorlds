@@ -486,7 +486,7 @@ namespace DynamicWorlds
                             {
                                 DynamicWorldsNet.SendClientMessage(
                                     whoAmI,
-                                    $"{result.SkippedCount} tile{(result.SkippedCount == 1 ? "" : "s")} skipped — anchor cap reached. Defeat more bosses to expand your limit.",
+                                    $"{result.SkippedCount} tile{(result.SkippedCount == 1 ? "" : "s")} skipped — anchor cap reached. {AnchoredTileSystem.GetCapHint()}",
                                     new Color(255, 200, 80));
                             }
                         }
