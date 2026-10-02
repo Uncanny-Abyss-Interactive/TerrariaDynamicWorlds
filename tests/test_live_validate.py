@@ -50,6 +50,16 @@ class ReportTests(unittest.TestCase):
         with self.assertRaisesRegex(live.LiveValidationError, "Timed out"):
             live.wait_for(lambda: None, process, 0, "in-game checks")
 
+    def test_fatal_startup_error_fails_without_waiting_for_modal_dialog(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runtime = Path(folder)
+            log = runtime / "client-console.log"
+            log.write_text("[Main Thread/FATAL] [tML]: Please ensure Steam is logged in and running.\n")
+            process = mock.Mock()
+            process.poll.return_value = None
+            with self.assertRaisesRegex(live.LiveValidationError, "Steam"):
+                live.wait_report(runtime / "result.json", "run", "passed", process, 600, log, runtime)
+
     def test_failed_context_stops_only_its_owned_process_group(self):
         process = mock.Mock(pid=12345)
         process.poll.return_value = None

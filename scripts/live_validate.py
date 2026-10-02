@@ -82,8 +82,10 @@ def wait_for(predicate, process, seconds: float, label: str):
         time.sleep(0.2)
 
 
-def wait_report(path, run_id, phase, process, seconds):
+def wait_report(path, run_id, phase, process, seconds, console=None, runtime=None):
     def ready():
+        if console is not None:
+            assert_no_runtime_errors(console, runtime)
         report = read_report(path, run_id)
         return report if report and report.get("phase") == phase else None
     return wait_for(ready, process, seconds, phase)
@@ -210,9 +212,9 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
             print("Live validation: generating a disposable Terraria world...", flush=True)
             try:
                 with running_game(args, server_runtime, env, console) as server:
-                    wait_report(root / "server-result.json", run_id, "world_ready", server, WORLD_TIMEOUT)
+                    wait_report(root / "server-result.json", run_id, "world_ready", server, WORLD_TIMEOUT, console, server_runtime)
                     send(server, "dwvalidate begin")
-                    server_result = wait_report(root / "server-result.json", run_id, "fixtures_ready", server, 60)
+                    server_result = wait_report(root / "server-result.json", run_id, "fixtures_ready", server, 60, console, server_runtime)
                     validate_report(server_result, SERVER_CHECKS, "fixtures_ready")
                     shutil.copy2(root / "server-result.json", evidence / "server-result.json")
                     send(server, "exit")
@@ -243,7 +245,7 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
                 print("Live validation: opening the graphical client in the disposable world...", flush=True)
                 try:
                     with running_game(client_args, client_runtime, client_env, client_log) as client:
-                        client_result = wait_report(root / "client-result.json", run_id, "passed", client, CLIENT_TIMEOUT)
+                        client_result = wait_report(root / "client-result.json", run_id, "passed", client, CLIENT_TIMEOUT, client_log, client_runtime)
                         validate_report(client_result, CLIENT_CHECKS, "passed")
                         try:
                             client.wait(timeout=30)
