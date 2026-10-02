@@ -14,7 +14,7 @@ namespace DynamicWorlds
     /// Broadcasts spooky countdown messages at 3 days, 1 day, and dawn of regen day.
     /// Persists the day counter in the world save so it survives restarts.
     /// Single-player can always use the scheduler when enabled. Multiplayer servers
-    /// must also enable scheduled multiplayer regen in config.
+    /// must also enable both multiplayer regen and scheduled multiplayer regen.
     /// </summary>
     public class WorldRegenScheduler : ModSystem
     {
@@ -208,7 +208,8 @@ namespace DynamicWorlds
 
         private static bool IsMultiplayerSchedulerEnabled()
         {
-            return ModContent.GetInstance<DynamicWorldsConfig>().EnableScheduledMultiplayerRegen;
+            var config = ModContent.GetInstance<DynamicWorldsConfig>();
+            return config.EnableMultiplayerRegen && config.EnableScheduledMultiplayerRegen;
         }
 
         private static bool ShouldTrackTimeInCurrentMode()
@@ -311,7 +312,7 @@ namespace DynamicWorlds
 
             if (Main.netMode == NetmodeID.Server)
             {
-                if (!ModContent.GetInstance<DynamicWorldsConfig>().EnableScheduledMultiplayerRegen)
+                if (!IsMultiplayerSchedulerEnabled())
                     return false;
 
                 if (!MultiplayerRegenSystem.QueueScheduledRegen(out string queueMessage))

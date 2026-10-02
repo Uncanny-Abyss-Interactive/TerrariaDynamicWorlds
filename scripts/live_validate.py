@@ -77,6 +77,11 @@ CLIENT_CHECKS.update({
 })
 
 
+SERVER_CHECKS.update("microfix.scheduler_" + name for name in (
+    "both_disabled", "master_required", "scheduled_required", "both_enabled",
+    "counter_required", "overdue_disabled_quiet", "never_queued_regen"))
+
+
 class LiveValidationError(RuntimeError):
     pass
 
