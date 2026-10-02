@@ -61,6 +61,8 @@ namespace DynamicWorlds
             if (DynamicWorldRegenSystem.TryHandlePostRegenEnter(Player))
                 return;
 
+            MultiplayerRegenSystem.TryHandlePlayerEnterWorld(Player);
+
             if (Main.netMode == NetmodeID.MultiplayerClient && Player.whoAmI == Main.myPlayer)
                 DynamicWorldsNet.RequestFullSync();
 

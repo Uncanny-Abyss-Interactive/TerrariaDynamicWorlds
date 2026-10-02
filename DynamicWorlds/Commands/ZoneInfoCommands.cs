@@ -99,7 +99,7 @@ namespace DynamicWorlds
     /// </summary>
     public class ClearZonesCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "clearzones";
         public override string Usage => "/clearzones";
         public override string Description =>
@@ -107,22 +107,21 @@ namespace DynamicWorlds
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
+            if (!DynamicWorldsPermissions.CanManageZones(caller, out string deniedReason))
             {
-                DynamicWorldsNet.RequestClearStructureZones();
-                caller.Reply("Requested removal of all structure zones.", Color.LightBlue);
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
                 return;
             }
 
             int count = StructureAnchorSystem.Zones.Count;
             if (count == 0)
             {
-                Main.NewText("No structure zones to clear.", 180, 180, 180);
+                caller.Reply("No structure zones to clear.", new Color(180, 180, 180));
                 return;
             }
 
             StructureAnchorSystem.Zones.Clear();
-            Main.NewText($"Cleared {count} structure zone{(count == 1 ? "" : "s")}.", 255, 150, 100);
+            caller.Reply($"Cleared {count} structure zone{(count == 1 ? "" : "s")}.", new Color(255, 150, 100));
         }
     }
 }

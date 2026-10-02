@@ -17,20 +17,19 @@ namespace DynamicWorlds
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            var config = ModContent.GetInstance<DynamicWorldsConfig>();
-            if (!config.AllowCheats)
+            if (!DynamicWorldsPermissions.CanUseCheats(caller, out string deniedReason))
             {
-                Main.NewText("Cheats are disabled. Enable 'Allow Cheats' in the mod config.", 255, 80, 80);
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
                 return;
             }
 
             if (Main.Map == null)
             {
-                Main.NewText("The world map is not ready yet.", 255, 80, 80);
+                caller.Reply("The world map is not ready yet.", new Color(255, 80, 80));
                 return;
             }
 
-            Main.NewText("Revealing the full map. This may take a moment...", 180, 220, 255);
+            caller.Reply("Revealing the full map. This may take a moment...", new Color(180, 220, 255));
 
             const int blackEdgeWidth = 40;
             int minX = Math.Max(0, blackEdgeWidth);
@@ -46,13 +45,13 @@ namespace DynamicWorlds
 
             Main.refreshMap = true;
             Main.updateMap = true;
-            Main.NewText("Revealed the full map for this character.", 150, 255, 150);
+            caller.Reply("Revealed the full map for this character.", new Color(150, 255, 150));
         }
     }
 
     public class KillDuplicateNPCsCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "killduplicatenpcs";
         public override string Usage => "/killduplicatenpcs";
         public override string Description =>
@@ -60,6 +59,12 @@ namespace DynamicWorlds
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            if (!DynamicWorldsPermissions.CanUseCheats(caller, out string deniedReason))
+            {
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
+                return;
+            }
+
             var seenTypes = new HashSet<int>();
             var npcsToDie = new List<int>();
 

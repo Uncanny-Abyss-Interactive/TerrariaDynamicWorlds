@@ -1,168 +1,89 @@
-Dynamic Worlds - Persistent World Progression + World Regeneration v0.4.5Dynamic Worlds - Persistent World Progression + World Regeneration
-
-
-
-Dynamic Worlds is a single-player focused tModLoader utility mod that lets you regenerate Terraria terrain without throwing away the playthrough built on top of it.Dynamic Worlds is a single-player focused tModLoader utility mod that lets you regenerate Terraria terrain without throwing away the playthrough built on top of it.
-
-
-
-Use /regenworld [seed] to:
-
-- snapshot world progression and preserved data- snapshot world progression and preserved data
-
-- save and exit the world cleanly- save and exit the world cleanly
-
-- run fresh Terraria/tModLoader worldgen through a loading screen- run fresh Terraria/tModLoader worldgen through a loading screen
-
-- restore protected builds, tiles, NPC state, and world progress- restore protected builds, tiles, NPC state, and world progress
-
-- automatically load back into the regenerated world- automatically load back into the regenerated world
-
-
-
-What gets preserved:What gets preserved:
-
-- Hardmode, game mode, world evil flag, ore tiers, boss flags, event flags, invasions, and world identity- Hardmode, game mode, world evil flag, ore tiers, boss flags, event flags, invasions, and world identity
-
-- Town NPC roster, names, positions, and preserved housing when a valid home survives- Town NPC roster, names, positions, and preserved housing when a valid home survives
-
-- Bed spawn handling and safe fallback to world spawn- Bed spawn handling and safe fallback to world spawn
-
-- Anchored tiles, structure zones, and container contents in preserved areas- Anchored tiles, structure zones, and container contents in preserved areas
-
-- Vanilla pylon tile-entity registration for preserved vanilla pylons- Vanilla pylon tile-entity registration for preserved vanilla pylons
-
-- Calamity Mod progression including boss flags, difficulty modes, acid rain state, and crafting unlocks (when Calamity is installed)- Calamity Mod progression including boss flags, difficulty modes, acid rain state, and crafting unlocks (when Calamity is installed)
-
-
-
-Main systems:Main systems:
-
-- Reality Anchor: preserve exact tiles, walls, liquids, wires, and containers- Reality Anchor: preserve exact tiles, walls, liquids, wires, and containers
-
-- Reality Eraser: force specific tiles to clear to empty space after every regen- Reality Eraser: force specific tiles to clear to empty space after every regen
-
-- Structure Anchor: preserve whole builds as movable structure zones with intelligent ground detection- Structure Anchor: preserve whole builds as movable structure zones
-
-- Biome Dowser: automatically relocate preserved vanilla pylons to matching biomes with intelligent placement modes- Biome Dowser: automatically relocate preserved vanilla pylons to matching biomes with intelligent placement modes
-
-- Automatic regen scheduler in single player with configurable interval and countdown warnings- Automatic regen scheduler in single player with configurable interval
-
-- Guide dialogue help page for the Reality Anchor- Guide dialogue help page for the Reality Anchor
-
-- Unified world tool overlay system: hold any tool to see all anchors, erasures, zones, and pylon placements- Unified world tool overlay system: hold any tool to see all anchors, erasures, zones, and pylon placements
-
-- Advanced configuration: control seed randomization, evil preservation, cheat access, and death-triggered regen- Advanced configuration: control seed randomization, evil preservation, and cheat access
-
-- Optimized tile-counting system for instant world loads (no more spinning wheel of death)
-
-How the tools work:
-
-How the tools work:- Hold any world tool to see anchors, erasures, structure zones, and Biome Dowser pylon zones together
-
-- Hold any world tool to see anchors, erasures, structure zones, and Biome Dowser pylon zones together- Reality Anchor left-clicks single tiles and drag-selects rectangles
-
-- Reality Anchor left-clicks single tiles and drag-selects rectangles; right-click restores all anchored tiles- Reality Eraser left-clicks single tiles and drag-selects rectangles
-
-- Reality Eraser left-clicks single tiles and drag-selects rectangles; right-click clears all erased tiles- Structure Anchor click-drags structure zones and Shift-click removes a zone
-
-- Structure Anchor click-drags structure zones and Shift-click removes a zone- Biome Dowser click-drags pylon zones, Right-click opens settings, and Shift-click removes a zone
-
-- Biome Dowser click-drags pylon zones, use the settings panel to choose placement modes (Surface/Underground/Floating), Shift-click removes zone- Structure zones cannot overlap other structure zones
-
-- Structure zones cannot overlap other structure zones- Individually anchored tiles cannot overlap structure zones
-
-- Individually anchored tiles cannot overlap structure zones- Pylon zones must contain exactly one vanilla pylon
-
-- Pylon zones must contain exactly one vanilla pylon
-
-- Structures automatically settle onto new terrain with bridge-gap support detectionUseful commands:
-
-- /regenworld [seed]
-
-Useful commands:- /snap
-
-- /regenworld [seed] - regenerate the world with optional seed- /dwtools
-
-- /multiregen <count> [seed] - run multiple regen cycles with player reload between each- /dwinfo
-
-- /snap - display current world progression snapshot and scheduler status- /dwzone [list|clear|clearall] [id]
-
-- /dwtools - receive all four Dynamic Worlds tools- /clearzones
-
-- /dwinfo - inspect saved anchored tiles, erased tiles, structure zones, and Biome Dowser zones- /hardmode [on|off]    (requires Allow Cheats)
-
-- /dwzone [list|clear|clearall] [id] - manage structure zones by ID- /down <bossOrEvent>   (requires Allow Cheats)
-
-- /clearzones - remove all structure zones at once- /killduplicatenpcs
-
-- /revealmap - reveal the entire world map (requires Allow Cheats)
-
-- /killduplicatenpcs - remove duplicate town NPCs (keeps one of each type)Config options and planned placeholders:
-
-- /hardmode [on|off] - toggle Hardmode (requires Allow Cheats)- Enable Scheduled Regen: turns the automatic regen scheduler on or off
-
-- /down <bossOrEvent> - mark a boss or event as defeated (requires Allow Cheats)- Scheduled Regen Interval (Days): controls how many in-game days pass between scheduled regens
-
-- /givetools - alias for /dwtools- Allow Cheats: enables /hardmode, /down, and inventory right-click actions on Reality Anchor and Reality Eraser
-
-- Preserve Evil Type: keeps the old world evil after regen
-
-Advanced features:- Preserve Dungeon Side: planned setting, not implemented yet, and may not appear in every config UI yet
-
-- World progression snapshots saved to JSON alongside world file for backup/inspection- Preserve Biome Features: planned setting, not implemented yet, and may not appear in every config UI yet
-
-- Scheduled regen with in-game day counter and countdown warnings at 3 days, 1 day, and regen dawn- Randomize World Each Regen: use a fresh seed each time, or reuse the current seed when available
-
-- Death-triggered regen option: automatically regenerate when player dies (configurable)
-
-- Intelligent NPC housing preservation: keeps homes intact if they survive regenMod compatibility:
-
-- Pylon auto-repair: preserves vanilla pylons and relocates them to new matching biomes- Calamity Mod support: preserves Calamity boss progression, difficulty modes, acid rain state, and crafting unlocks
-
-- Full support for modded containers (chests, dressers, safes) through tModLoader serialization- Single-player only
-
-- Calamity Mod integration: preserves boss flags, difficulty modes, acid rain state, biome progress, and crafting unlocks- Works best if the same mod list stays loaded before and after regen
-
-- Real loading-screen regen instead of freezing live gameplay- Preserved chest contents support modded items through tModLoader item serialization
-
-- Modded tiles, walls, and town NPCs are more likely to survive if their source mods are still installed
-
-Config options:- Compatibility is weaker for custom pylons, unusual tile entities, and major worldgen-overhaul mods
-
-- Enable Scheduled Regen: turns the automatic regen scheduler on or off
-
-- Scheduled Regen Interval (Days): controls how many in-game days pass between scheduled regens (default 7)FAQ:
-
-- Allow Cheats: enables /hardmode, /down, /revealmap, /killduplicatenpcs, and inventory right-click actions- Pylons: preserved vanilla pylons are automatically relocated to matching biomes using the Biome Dowser system. Create pylon zones around your pylon structures and choose the placement mode (Surface, Underground, or Floating) that best matches where you want them. The mod intelligently scans for a matching biome and relocates the structure there during regen. If no valid matching biome is found, the pylon stays at its current location. Pylons are also repaired after regen so they function again.
-
-- Regenerate World on Death: when enabled, dying triggers an automatic world regeneration- In-game regen: regen starts in-game but immediately saves and exits to a loading screen. You are not moving around in the live world while generation is happening.
-
-- Preserve Evil Type: keeps the old world evil (Corruption or Crimson) after regen- Older worlds: if a world can still be loaded in your current setup, Dynamic Worlds can still snapshot and regenerate it. It cannot reconstruct an unknown original 1.3 seed or reproduce old 1.3 worldgen exactly.
-
-- Randomize World Each Regen: use a fresh seed each time, or reuse the current seed when available- Changing world evil: yes, if Preserve Evil Type is turned off. The new world keeps the evil chosen by the generated result.
-
-- Preserve Dungeon Side: planned setting, not yet implemented- Buried or embedded builds: Structure Anchor settles a build onto new ground and bridges small support gaps, but it does not fully generate a new hill around the structure unless that surrounding terrain was also preserved.
-
-- Preserve Biome Features: planned setting, not yet implemented
-
+Dynamic Worlds
 Fresh terrain, same playthrough.
 
-Mod compatibility:
-- Calamity Mod: full support for boss progression, difficulty modes, acid rain state, and crafting unlocks
-- Single-player only
-- Works best if the same mod list stays loaded before and after regen
-- Preserved chest and dresser contents support modded items through tModLoader item serialization
-- Modded tiles, walls, and town NPCs are more likely to survive if their source mods are still installed
-- Compatibility is weaker for custom pylons, unusual tile entities, and major worldgen-overhaul mods
+Dynamic Worlds is a tModLoader utility mod that regenerates Terraria terrain without throwing away the playthrough built on top of it.
 
-FAQ:
-- Pylons: preserved vanilla pylons are automatically relocated to matching biomes using the Biome Dowser system. Create pylon zones around your pylon structures and choose the placement mode (Surface, Underground, or Floating) that best matches where you want them. The mod intelligently scans for a matching biome and relocates the structure there during regen. If no valid matching biome is found, the pylon stays at its current location. Pylons are also repaired after regen so they function again.
-- In-game regen: regen starts in-game but immediately saves and exits to a loading screen. You are not moving around in the live world while generation is happening.
-- Older worlds: if a world can still be loaded in your current setup, Dynamic Worlds can still snapshot and regenerate it. It cannot reconstruct an unknown original 1.3 seed or reproduce old 1.3 worldgen exactly.
-- Changing world evil: yes, if Preserve Evil Type is turned off. The new world keeps the evil chosen by the generated result.
-- Buried or embedded builds: Structure Anchor settles a build onto new ground and bridges small support gaps, but it does not fully generate a new hill around the structure unless that surrounding terrain was also preserved.
-- Regen on death: when enabled in config, dying will trigger an automatic world regeneration in single-player mode. The world progression is preserved and restored after regen.
-- Multiple regen cycles: use /multiregen to run the full regen flow multiple times, with the player being reloaded into the world between each cycle. Useful for testing or content creation.
+Use /regenworld [seed] to:
+- snapshot world progression and preserved data
+- save the world cleanly
+- generate fresh terrain
+- restore protected builds, exact tiles, NPC state, and progression
+- reload into the regenerated world
+
+What gets preserved:
+- Hardmode, game mode, evil type, ore tiers, boss flags, event flags, invasions, and world identity
+- Town NPC roster, names, positions, and preserved housing when a valid home survives
+- Bed spawn handling with safe fallback to world spawn
+- Anchored tiles, structure zones, Biome Dowser zones, and preserved container contents
+- Vanilla pylon registration and repair after restore
+- Calamity progression and world state when Calamity is installed
+
+Main systems:
+- Reality Anchor: preserve exact tiles, walls, liquids, wires, actuators, and containers
+- Reality Eraser: force marked areas to clear to empty space after every regen
+- Structure Anchor: preserve whole builds as movable structure zones
+- Biome Dowser: preserve vanilla pylon structures and relocate them to matching biomes
+- Unified overlay system: hold any world tool to see all saved world data together
+- Automatic scheduler: trigger regen by in-game days or real-world days
+- Pre-regen backup system: keeps rolling backups of the old world before regen runs
+
+Multiplayer support:
+- synced anchors, erasures, structure zones, and Biome Dowser zones
+- server-admin /regenworld with countdown, disconnect, regen, and reconnect flow
+- configurable multiplayer regen permissions
+- optional scheduled multiplayer regen
+
+How the tools work:
+- Reality Anchor: left-click single tiles, drag rectangles, inventory right-click restore when cheats are enabled
+- Reality Eraser: left-click single tiles, drag rectangles, inventory right-click clear when cheats are enabled
+- Structure Anchor: click-drag a structure zone, Shift-click inside a zone to remove it
+- Biome Dowser: click-drag a pylon zone, right-click to open settings, Shift-click inside a zone to remove it
+- Hold any world tool to see anchors, erasures, structure zones, and Biome Dowser zones together
+
+Useful commands:
+- /regenworld [seed]
+- /multiregen <count> [seed]    single-player only
+- /snap
+- /dwtools [player]
+- /dwtool <anchor|eraser|structure|dowser|prefab|all> [player]
+- /dwinfo
+- /dwzone [list|clear|clearall] [id]
+- /clearzones
+- /dwperm
+- /dwregenconfig
+- /revealmap                      requires Allow Cheats
+- /hardmode [on|off]              requires Allow Cheats
+- /down <bossOrEvent>             requires Allow Cheats
+- /killduplicatenpcs              requires Allow Cheats
+
+Config highlights:
+- Enable Scheduled Regen
+- Scheduled Regen Interval (Days)
+- Scheduled Regen Mode: in-game days or real-world days
+- Enable Multiplayer Regen
+- Enable Scheduled Multiplayer Regen
+- Multiplayer Regen Countdown (Seconds)
+- Multiplayer Regen Disconnect Timeout (Seconds)
+- Announce Multiplayer Regen Countdown
+- World tool, zone, tool-command, regen-command, and cheat-command permissions
+- Trusted Players list
+- Allow Cheats
+- Regenerate World on Death    single-player only
+- Preserve Evil Type
+- Randomize World Each Regen
+- Preserve Dungeon Side        planned, not implemented
+- Preserve Biome Features      planned, not implemented
+
+Compatibility:
+- best when the same mod list stays installed before and after regen
+- Calamity support preserves boss progression, difficulty modes, acid rain, Boss Rush state, and related world data
+- modded items in preserved chests and dressers are supported through tModLoader item serialization
+- modded tiles, walls, and town NPCs often survive if their source mods remain installed
+- weaker compatibility for custom pylons, unusual tile entities, and major worldgen-overhaul mods
+
+Important limits:
+- multiplayer regen is a server maintenance flow, not seamless live regeneration
+- /multiregen is still single-player only
+- Biome Dowser currently supports vanilla pylons only
 
 Fresh terrain, same playthrough.

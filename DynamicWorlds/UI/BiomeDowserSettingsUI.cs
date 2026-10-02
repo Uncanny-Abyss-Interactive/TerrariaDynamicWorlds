@@ -422,6 +422,9 @@ namespace DynamicWorlds.UI
         private BiomeDowserSettingsUI _state;
         private bool _visible;
 
+        public static bool IsVisible =>
+            !Main.dedServ && ModContent.GetInstance<BiomeDowserSettingsSystem>()._visible;
+
         public override void Load()
         {
             if (Main.dedServ)

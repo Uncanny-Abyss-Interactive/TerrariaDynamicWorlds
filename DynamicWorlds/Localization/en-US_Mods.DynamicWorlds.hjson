@@ -106,12 +106,72 @@ Configs: {
 
 		ScheduledRegenIntervalDays: {
 			Label: Scheduled Regen Interval (Days)
-			Tooltip: How many in-game days pass between automatic world regenerations when scheduled regen is enabled
+			Tooltip: How many days pass between automatic world regenerations. Uses in-game days or real-world days depending on Scheduled Regen Mode
+		}
+
+		ScheduledRegenMode: {
+			Label: Scheduled Regen Mode
+			Tooltip: Choose whether the automatic regen scheduler uses Terraria in-game days or real-world days
 		}
 
 		AllowCheats: {
 			Label: Allow Cheats
-			Tooltip: Enable cheat commands and manual tool actions such as /down, /hardmode, and Reality Anchor/Eraser inventory right-click
+			Tooltip: Master switch for cheat commands and manual tool actions such as /down, /hardmode, /revealmap, and Reality Anchor/Eraser inventory right-click
+		}
+
+		WorldToolEditPermission: {
+			Label: World Tool Edit Permission
+			Tooltip: Who can place or remove anchors, erasures, structure zones, and Biome Dowser zones in multiplayer
+		}
+
+		ZoneCommandPermission: {
+			Label: Zone Command Permission
+			Tooltip: Who can use zone-management commands such as /dwzone clear and /clearzones in multiplayer
+		}
+
+		ToolCommandPermission: {
+			Label: Tool Command Permission
+			Tooltip: Who can use /dwtools and /dwtool in multiplayer
+		}
+
+		RegenCommandPermission: {
+			Label: Regen Command Permission
+			Tooltip: Who can trigger /regenworld or /multiregen. In multiplayer, /regenworld uses the server countdown, disconnect, and reconnect regen flow
+		}
+
+		CheatCommandPermission: {
+			Label: Cheat Command Permission
+			Tooltip: Who can use cheat/admin commands such as /hardmode, /down, and /killduplicatenpcs in multiplayer when Allow Cheats is enabled
+		}
+
+		TrustedPlayers: {
+			Label: Trusted Players
+			Tooltip: Player names that count as trusted for the multiplayer permission settings above. Names are matched case-insensitively
+		}
+
+		EnableMultiplayerRegen: {
+			Label: Enable Multiplayer Regen
+			Tooltip: Allow /regenworld to run on multiplayer servers using the disconnect-and-reconnect regen flow
+		}
+
+		EnableScheduledMultiplayerRegen: {
+			Label: Enable Scheduled Multiplayer Regen
+			Tooltip: Allow the automatic day-based regen scheduler to queue multiplayer server regens. This uses the multiplayer countdown and disconnect flow
+		}
+
+		MultiplayerRegenCountdownSeconds: {
+			Label: Multiplayer Regen Countdown (Seconds)
+			Tooltip: How long the server warns connected players before disconnecting them and starting multiplayer regen
+		}
+
+		MultiplayerRegenDisconnectTimeoutSeconds: {
+			Label: Multiplayer Disconnect Timeout (Seconds)
+			Tooltip: How long the server waits for players to disconnect after the countdown before cancelling multiplayer regen
+		}
+
+		MultiplayerRegenAnnounceCountdown: {
+			Label: Announce Multiplayer Regen Countdown
+			Tooltip: Broadcast countdown updates in chat before multiplayer regen disconnects everyone
 		}
 
 		PreserveEvilType: {
@@ -142,6 +202,39 @@ Configs: {
 		BiomeDowserRegenChatLog: {
 			Label: Biome Dowser Regen Chat Log
 			Tooltip: Show detailed Biome Dowser placement results in chat after a world regeneration finishes loading
+		}
+	}
+
+	DynamicWorldsPermissionMode: {
+		Tooltip: ""
+
+		Anyone: {
+			Label: Anyone
+			Tooltip: ""
+		}
+
+		TrustedPlayers: {
+			Label: Trusted Players
+			Tooltip: ""
+		}
+
+		ConsoleOnly: {
+			Label: Console Only
+			Tooltip: ""
+		}
+	}
+
+	DynamicWorldsScheduleMode: {
+		Tooltip: ""
+
+		InGameDays: {
+			Label: In-Game Days
+			Tooltip: ""
+		}
+
+		RealWorldDays: {
+			Label: Real-World Days
+			Tooltip: ""
 		}
 	}
 }

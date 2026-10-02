@@ -7,7 +7,7 @@ namespace DynamicWorlds
 {
     public class HardmodeCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "hardmode";
         public override string Usage => "/hardmode [on|off]";
         public override string Description =>
@@ -15,16 +15,15 @@ namespace DynamicWorlds
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            var config = ModContent.GetInstance<DynamicWorldsConfig>();
-            if (!config.AllowCheats)
+            if (!DynamicWorldsPermissions.CanUseCheats(caller, out string deniedReason))
             {
-                Main.NewText("Cheats are disabled. Enable 'Allow Cheats' in the mod config.", 255, 80, 80);
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
                 return;
             }
 
             if (Main.netMode != NetmodeID.SinglePlayer)
             {
-                Main.NewText("Hardmode command only works in single player.", 255, 80, 80);
+                caller.Reply("Hardmode command only works in single player.", new Microsoft.Xna.Framework.Color(255, 80, 80));
                 return;
             }
 
@@ -40,18 +39,18 @@ namespace DynamicWorlds
             {
                 if (Main.hardMode)
                 {
-                    Main.NewText("Hardmode is already enabled for this world.", 255, 220, 120);
+                    caller.Reply("Hardmode is already enabled for this world.", new Microsoft.Xna.Framework.Color(255, 220, 120));
                 }
                 else
                 {
                     WorldGen.StartHardmode();
-                    Main.NewText("Hardmode ENABLED for this world using the vanilla transition.", 150, 255, 150);
+                    caller.Reply("Hardmode ENABLED for this world using the vanilla transition.", new Microsoft.Xna.Framework.Color(150, 255, 150));
                 }
             }
             else
             {
                 Main.hardMode = false;
-                Main.NewText("Hardmode DISABLED for this world.", 255, 150, 150);
+                caller.Reply("Hardmode DISABLED for this world.", new Microsoft.Xna.Framework.Color(255, 150, 150));
             }
 
             WorldProgressUtil.SaveToFile();
@@ -60,7 +59,7 @@ namespace DynamicWorlds
 
     public class DownCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "down";
         public override string Usage => "/down <bossOrEvent>";
         public override string Description =>
@@ -68,34 +67,33 @@ namespace DynamicWorlds
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
-            var config = ModContent.GetInstance<DynamicWorldsConfig>();
-            if (!config.AllowCheats)
+            if (!DynamicWorldsPermissions.CanUseCheats(caller, out string deniedReason))
             {
-                Main.NewText("Cheats are disabled. Enable 'Allow Cheats' in the mod config.", 255, 80, 80);
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
                 return;
             }
 
             if (Main.netMode != NetmodeID.SinglePlayer)
             {
-                Main.NewText("Down command only works in single player.", 255, 80, 80);
+                caller.Reply("Down command only works in single player.", new Microsoft.Xna.Framework.Color(255, 80, 80));
                 return;
             }
 
             if (args.Length == 0)
             {
-                Main.NewText("Usage: /down <eye|evil|skeletron|queenbee|kingslime|deerclops|mech1|mech2|mech3|plantera|golem|fishron|moonlord|goblins|frost|pirates|martians|pumpkin|frostmoon>", 255, 230, 150);
+                caller.Reply("Usage: /down <eye|evil|skeletron|queenbee|kingslime|deerclops|mech1|mech2|mech3|plantera|golem|fishron|moonlord|goblins|frost|pirates|martians|pumpkin|frostmoon>", new Microsoft.Xna.Framework.Color(255, 230, 150));
                 return;
             }
 
             string key = args[0].ToLowerInvariant();
             if (!DownFlagHelper.SetDowned(key, out string label))
             {
-                Main.NewText($"Unknown boss/event '{key}'.", 255, 80, 80);
-                Main.NewText("Valid: eye, evil, skeletron, queenbee, kingslime, deerclops, mech1, mech2, mech3, plantera, golem, fishron, moonlord, goblins, frost, pirates, martians, pumpkin, frostmoon", 255, 230, 150);
+                caller.Reply($"Unknown boss/event '{key}'.", new Microsoft.Xna.Framework.Color(255, 80, 80));
+                caller.Reply("Valid: eye, evil, skeletron, queenbee, kingslime, deerclops, mech1, mech2, mech3, plantera, golem, fishron, moonlord, goblins, frost, pirates, martians, pumpkin, frostmoon", new Microsoft.Xna.Framework.Color(255, 230, 150));
                 return;
             }
 
-            Main.NewText($"Marked {label} as defeated.", 150, 255, 150);
+            caller.Reply($"Marked {label} as defeated.", new Microsoft.Xna.Framework.Color(150, 255, 150));
             WorldProgressUtil.SaveToFile();
         }
     }

@@ -41,7 +41,7 @@ namespace DynamicWorlds
             int cycleCount = 1,
             string snapshotFolderPath = null)
         {
-            if (DynamicWorldRegenSystem.IsBusy)
+            if (DynamicWorldRegenSystem.IsBusy || MultiplayerRegenSystem.IsBusy)
             {
                 Main.NewText("World regeneration is already in progress.", 255, 200, 50);
                 return;
@@ -114,13 +114,14 @@ namespace DynamicWorlds
             mod.Logger.Info("Capturing world state for menu-based regeneration...");
 
             WorldProgressSnapshot before = WorldProgressUtil.Capture();
-            WorldProgressUtil.PrintSnapshotToChat("Before regen", before);
+            if (Main.netMode == NetmodeID.SinglePlayer)
+                WorldProgressUtil.PrintSnapshotToChat("Before regen", before);
 
             AnchoredTileSystem.RefreshAllChestSnapshots();
             StructureAnchorSystem.RefreshAllChestSnapshots();
             BiomeDowserSystem.RefreshAllChestSnapshots();
 
-            Player player = Main.LocalPlayer;
+            Player player = Main.netMode == NetmodeID.SinglePlayer ? Main.LocalPlayer : null;
             int newSeed = ResolveNewSeed(seedOverride, out string seedLabel);
             string resolvedSnapshotFolderPath = ResolveOrCreateMultiRegenSnapshotFolder(snapshotFolderPath, cycleIndex, cycleCount);
 
@@ -212,6 +213,7 @@ namespace DynamicWorlds
                 WorldProgressUtil.SaveToFile();
             });
 
+            WorldRegenScheduler.NotifyRegenCompleted();
             mod.Logger.Info("Preserved world state applied successfully.");
             return result;
         }
@@ -341,6 +343,7 @@ namespace DynamicWorlds
         private static int ResolveNewSeed(string seedOverride, out string seedLabel)
         {
             var config = ModContent.GetInstance<DynamicWorldsConfig>();
+            bool announceLocally = Main.netMode == NetmodeID.SinglePlayer;
 
             if (!string.IsNullOrWhiteSpace(seedOverride))
             {
@@ -349,7 +352,8 @@ namespace DynamicWorlds
                     : Math.Abs(seedOverride.GetHashCode()) & 0x7FFFFFFF;
 
                 seedLabel = seedOverride;
-                Main.NewText($"Using seed: {seedOverride} -> {newSeed}", 180, 180, 255);
+                if (announceLocally)
+                    Main.NewText($"Using seed: {seedOverride} -> {newSeed}", 180, 180, 255);
                 return newSeed;
             }
 
@@ -361,13 +365,15 @@ namespace DynamicWorlds
                     : Math.Abs(currentSeedText.GetHashCode()) & 0x7FFFFFFF;
 
                 seedLabel = string.IsNullOrWhiteSpace(currentSeedText) ? newSeed.ToString() : currentSeedText;
-                Main.NewText($"Reusing world seed for consistent layout: {seedLabel}", 180, 180, 255);
+                if (announceLocally)
+                    Main.NewText($"Reusing world seed for consistent layout: {seedLabel}", 180, 180, 255);
                 return newSeed;
             }
 
             int randomSeed = (int)(DateTime.Now.Ticks & 0x7FFFFFFF);
             seedLabel = randomSeed.ToString();
-            Main.NewText($"Using random regen seed: {randomSeed}", 180, 180, 255);
+            if (announceLocally)
+                Main.NewText($"Using random regen seed: {randomSeed}", 180, 180, 255);
             return randomSeed;
         }
 
@@ -450,9 +456,14 @@ namespace DynamicWorlds
 
         private static RegenExecutionResult DeterminePlayerPlacement(PendingRegenContext pending)
         {
+            return DeterminePlacementForSavedSpawn(pending.SavedSpawnX, pending.SavedSpawnY);
+        }
+
+        internal static RegenExecutionResult DeterminePlacementForSavedSpawn(int savedSpawnX, int savedSpawnY)
+        {
             var result = new RegenExecutionResult
             {
-                HadSavedSpawn = pending.SavedSpawnX >= 0 && pending.SavedSpawnY >= 0,
+                HadSavedSpawn = savedSpawnX >= 0 && savedSpawnY >= 0,
                 SpawnTileX = Main.spawnTileX,
                 SpawnTileY = Main.spawnTileY
             };
@@ -460,7 +471,7 @@ namespace DynamicWorlds
             if (!result.HadSavedSpawn)
                 return result;
 
-            Point16 savedSpawn = new Point16(pending.SavedSpawnX, pending.SavedSpawnY);
+            Point16 savedSpawn = new Point16(savedSpawnX, savedSpawnY);
             Point16 effectiveSpawn = savedSpawn;
 
             if (StructureAnchorSystem.TryTranslateSavedPoint(savedSpawn, out Point16 translatedSpawn))
@@ -883,39 +894,79 @@ namespace DynamicWorlds
 
     public class RegenWorldCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "regenworld";
         public override string Usage => "/regenworld [seed]";
         public override string Description =>
             "Regenerates the world layout while keeping Hardmode, ores, bosses, invasions, etc. " +
-            "Optionally pass a seed: /regenworld 12345 or /regenworld myseedname (single-player only).";
+            "Optionally pass a seed: /regenworld 12345 or /regenworld myseedname.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            if (!DynamicWorldsPermissions.CanRunRegen(caller, out string deniedReason))
+            {
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
+                return;
+            }
+
+            if (DynamicWorldRegenSystem.IsBusy || MultiplayerRegenSystem.IsBusy)
+            {
+                caller.Reply("World regeneration is already in progress.", new Color(255, 200, 80));
+                return;
+            }
+
             string seed = args.Length > 0 ? args[0] : null;
-            SingleplayerRegenHelper.RegenerateWorldWithProgress(seed);
+
+            if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                SingleplayerRegenHelper.RegenerateWorldWithProgress(seed);
+                return;
+            }
+
+            if (!ModContent.GetInstance<DynamicWorldsConfig>().EnableMultiplayerRegen)
+            {
+                caller.Reply("Multiplayer regen is disabled in the Dynamic Worlds config.", new Color(255, 200, 80));
+                return;
+            }
+
+            if (MultiplayerRegenSystem.QueueRegen(seed, caller, out string queueMessage))
+                caller.Reply(queueMessage, new Color(180, 220, 255));
+            else
+                caller.Reply(queueMessage, new Color(255, 120, 120));
         }
     }
 
     public class MultiRegenWorldCommand : ModCommand
     {
-        public override CommandType Type => CommandType.Chat;
+        public override CommandType Type => CommandType.World | CommandType.Console;
         public override string Command => "multiregen";
         public override string Usage => "/multiregen <count> [seed]";
         public override string Description =>
-            "Runs the full loading-screen world regen flow multiple times in a row, reloading the player into the world between cycles.";
+            "Runs the full loading-screen world regen flow multiple times in a row, reloading the player into the world between cycles. Single-player only.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            if (!DynamicWorldsPermissions.CanRunRegen(caller, out string deniedReason))
+            {
+                DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
+                return;
+            }
+
+            if (Main.netMode != NetmodeID.SinglePlayer)
+            {
+                caller.Reply("Full multiplayer regen is not implemented yet. Use /multiregen in single player for now.", new Color(255, 200, 80));
+                return;
+            }
+
             if (args.Length == 0)
             {
-                Main.NewText("Usage: /multiregen <count> [seed]", 255, 230, 150);
+                caller.Reply("Usage: /multiregen <count> [seed]", new Color(255, 230, 150));
                 return;
             }
 
             if (!int.TryParse(args[0], out int cycleCount) || cycleCount <= 0)
             {
-                Main.NewText("Regen count must be a positive whole number.", 255, 80, 80);
+                caller.Reply("Regen count must be a positive whole number.", new Color(255, 80, 80));
                 return;
             }
 

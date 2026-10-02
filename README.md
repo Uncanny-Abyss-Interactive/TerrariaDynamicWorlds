@@ -1,8 +1,12 @@
 # Dynamic Worlds
 
-Dynamic Worlds is a single-player focused tModLoader utility mod for rebuilding a Terraria world's terrain without throwing away the playthrough built on top of it.
+Dynamic Worlds is a tModLoader utility mod for rebuilding a Terraria world's terrain without throwing away the playthrough built on top of it.
 
 The mod snapshots your world state, saves the important things you marked, runs fresh world generation through a menu loading screen, restores your preserved data, and automatically loads you back into the regenerated world.
+
+Single-player is still the most polished path, but the mod now also supports multiplayer world-tool syncing and server-admin `/regenworld` with a countdown, disconnect, and reconnect flow.
+
+If you are running a server, start with the new [server admin guide](./SERVER_ADMIN_GUIDE.md).
 
 ## What Dynamic Worlds Currently Does
 
@@ -16,7 +20,9 @@ The mod snapshots your world state, saves the important things you marked, runs 
 - Reassigns town NPC housing when their homes survived through anchors or structure zones.
 - Repairs preserved vanilla pylons so they register correctly again after regen.
 - Automatically reloads the regenerated world and places the player at a valid spawn.
-- Runs an automatic regen scheduler in single player, with a configurable interval in in-game days.
+- Runs an automatic regen scheduler with a configurable interval in either in-game days or real-world days.
+- Supports multiplayer world-tool syncing, permissions, and server-admin `/regenworld`.
+- Supports optional scheduled multiplayer regen using the same countdown/disconnect flow as manual server regen.
 - **NEW:** Advanced configuration system to control regen behavior (seed randomization, evil type preservation, cheat gating).
 - **NEW:** Calamity Mod progression tracking and restoration support.
 - **NEW:** Per-tile anchor system now supports modded tiles, walls, and container items via tModLoader serialization.
@@ -25,15 +31,16 @@ The mod snapshots your world state, saves the important things you marked, runs 
 
 ## Important Current Limits
 
-- Single-player only. Multiplayer is not supported.
+- Multiplayer regen is a server-maintenance flow, not a seamless in-world live regen. Connected players are warned, disconnected, then rejoin after the server finishes regenerating the world.
+- `/multiregen` is still single-player only.
 - Vanilla pylons are relocated and repaired by `Biome Dowser` if preserved in a pylon zone, but relocation depends on finding a valid matching biome at the destination.
 - `Preserve Dungeon Side` and `Preserve Biome Features` exist in config as planned options, but they are not implemented yet.
-- Scheduled regen can now be enabled or disabled in config, and its day interval can be customized.
+- Scheduled regen can now be enabled or disabled in config, its day interval can be customized, and it can use either in-game days or real-world days. Multiplayer scheduling is separately gated so servers can keep manual regen only if they prefer.
 - Calamity Mod compatibility requires Calamity to be installed; the mod does not automatically detect other major content mods yet.
 
 ## Quick Start
 
-1. Enter a world. Dynamic Worlds automatically gifts you the three core tools if you do not already have them.
+1. Enter a world. Dynamic Worlds automatically gifts you the four core preservation tools if you do not already have them.
 2. Use `Reality Anchor` for exact tiles you never want to lose.
 3. Use `Structure Anchor` for houses, bases, and large builds you want moved onto the new terrain as a unit.
 4. Use `Reality Eraser` anywhere you always want cleared out after regen.
@@ -106,7 +113,7 @@ These are the main runtime systems in the mod and what they are responsible for.
 | `BiomeDowserSystem` | `DynamicWorlds/BiomeDowser.cs` | **NEW:** Manages pylon zones, detects biome types, and intelligently relocates preserved pylon structures to matching biomes during regen. |
 | `PylonRestoreHelper` | `DynamicWorlds/PylonRestoreHelper.cs` | Recreates missing vanilla pylon tile entities after restore and refreshes the vanilla pylon system. |
 | `CalamityCompat` | `DynamicWorlds/CalamityCompat.cs` | **NEW:** Detects Calamity Mod and preserves boss progression, world events, crafting unlocks, and acid rain state across regen. |
-| `WorldToolOverlayHelper` | `DynamicWorlds/WorldToolOverlayHelper.cs` | **NEW:** Unified overlay rendering system for all three world tools. |
+| `WorldToolOverlayHelper` | `DynamicWorlds/WorldToolOverlayHelper.cs` | **NEW:** Unified overlay rendering system for all world tools. |
 
 ## Mod Compatibility
 
@@ -148,7 +155,7 @@ Compatibility is weaker for:
 
 ## World Tools
 
-All three tools are auto-gifted on first world entry. You can also get them again with `/dwtools`.
+All four preservation tools are auto-gifted on first world entry. You can also get them again with `/dwtools` or individually with `/dwtool`.
 
 Holding any one of the three tools shows all saved world overlays at once:
 
@@ -313,15 +320,20 @@ Good use cases:
 
 | Command | What it does | Notes |
 | --- | --- | --- |
-| `/regenworld [seed]` | Saves the world, opens the loading screen, runs regen, restores preserved data, and reloads the world. | Single-player only. Optional explicit seed. |
+| `/regenworld [seed]` | Regenerates the world with an optional explicit seed. | Single-player uses the loading-screen flow. Multiplayer uses the server countdown, disconnect, regenerate, and reconnect flow. |
+| `/multiregen <count> [seed]` | Runs multiple full regen cycles back-to-back. | Single-player only. Useful for testing and content creation. |
 | `/snap` | Prints the current captured world progression snapshot. | Also prints the current scheduled regen status. |
-| `/dwtools` | Gives the three world tools again. | Utility command. |
-| `/dwinfo` | Prints counts and bounds for anchored tiles, erased tiles, and structure zones. | Useful for sanity checking saved data. |
+| `/dwtools [player]` | Gives all Dynamic Worlds tools again. | Can target another player in multiplayer. |
+| `/dwtool <anchor|eraser|structure|dowser|prefab|all> [player]` | Gives one specific tool or the full set. | Useful for server admins and testing. |
+| `/dwinfo` | Prints counts and bounds for saved anchors, erasures, structure zones, and Biome Dowser zones. | Useful for sanity checking saved data. |
 | `/dwzone` | Lists structure zones. | Equivalent to `/dwzone list`. |
 | `/dwzone list` | Lists all saved structure zones. | Shows size and coordinates. |
 | `/dwzone clear <id>` | Removes one structure zone by ID. | Also accepts `/dwzone remove <id>`. |
-| `/dwzone clearall` | Removes every structure zone. | Leaves anchors and erasures alone. |
-| `/clearzones` | Removes all structure zones. | Single-player only. |
+| `/dwzone clearall` | Removes every structure zone. | Leaves anchors, erasures, and Biome Dowser zones alone. |
+| `/clearzones` | Removes all structure zones. | Multiplayer-safe when the caller has zone permission. |
+| `/dwperm` | Views or changes Dynamic Worlds multiplayer permissions. | Controls who can edit tools, use regen, use cheats, and more. |
+| `/dwregenconfig` | Views or changes multiplayer regen scheduler settings. | Lets admins change countdowns, scheduler mode, interval, and multiplayer scheduling without opening config UI. |
+| `/revealmap` | Reveals the map for the current character. | Requires `Allow Cheats`. |
 | `/hardmode [on|off]` | Forces Hardmode on or off. | Requires `Allow Cheats`. |
 | `/down <bossOrEvent>` | Marks a boss or event as defeated. | Requires `Allow Cheats`. |
 | `/killduplicatenpcs` | Removes duplicate town NPCs and keeps one of each type. | Cleanup tool. |
@@ -340,9 +352,23 @@ Dynamic Worlds currently uses the following server-side config values and planne
 
 | Setting | What it means today | Notes |
 | --- | --- | --- |
-| `Enable Scheduled Regen` | Turns the automatic regen scheduler on or off. | When disabled, the saved day progress is paused instead of advancing. |
-| `Scheduled Regen Interval (Days)` | Sets how many in-game days pass between scheduled automatic regens. | Clamped to at least 1 day. |
+| `Enable Scheduled Regen` | Turns the automatic regen scheduler on or off. | When disabled, scheduled progress is paused. |
+| `Scheduled Regen Interval (Days)` | Sets how many days pass between scheduled regens. | Used by both in-game-day and real-world-day scheduling. |
+| `Scheduled Regen Mode` | Chooses whether scheduled regen uses Terraria in-game days or real-world days. | `InGameDays` is the original behavior. `RealWorldDays` is useful for servers. |
+| `Enable Multiplayer Regen` | Allows manual multiplayer `/regenworld`. | Multiplayer regen uses the countdown/disconnect/reconnect flow. |
+| `Enable Scheduled Multiplayer Regen` | Allows the automatic scheduler to queue multiplayer regens. | Lets servers keep manual regen only if they prefer. |
+| `Multiplayer Regen Countdown (Seconds)` | Sets how long multiplayer regen warns players before disconnecting them. | `0` starts immediately. |
+| `Multiplayer Regen Disconnect Timeout (Seconds)` | Sets how long the server waits for players to disconnect before cancelling regen. | Clamped to at least 5 seconds. |
+| `Announce Multiplayer Regen Countdown` | Controls whether countdown updates are broadcast in chat. | Useful for quieter private servers. |
+| `World Tool Edit Permission` | Controls who can place or remove anchors, erasures, structure zones, and Biome Dowser zones in multiplayer. | Uses the `Anyone / Trusted / Console` permission model. |
+| `Zone Command Permission` | Controls who can run zone-management commands in multiplayer. | Applies to `/dwzone` and `/clearzones`. |
+| `Tool Command Permission` | Controls who can use `/dwtools` and `/dwtool` in multiplayer. | Good for admin-only tool distribution. |
+| `Regen Command Permission` | Controls who can run `/regenworld` and `/multiregen`. | Recommended `Console Only` on public servers. |
+| `Cheat Command Permission` | Controls who can use cheat/admin commands in multiplayer. | Works together with `Allow Cheats`. |
+| `Trusted Players` | List of player names treated as trusted for the permission system. | Name matching is case-insensitive. |
 | `Allow Cheats` | Enables cheat-gated features such as `/hardmode`, `/down`, and inventory right-click actions on `Reality Anchor` and `Reality Eraser`. | Recommended off for normal play, on for testing/admin use. |
+| `Biome Dowser Regen Chat Log` | Shows detailed Biome Dowser placement summaries after regen. | Useful for tuning pylon zone behavior. |
+| `Regenerate World on Death` | Triggers regen automatically when the player dies. | Single-player only. |
 | `Preserve Evil Type` | Keeps Crimson/Corruption matching the previous world after regen. | Turn this off if you want regen to roll a new evil. |
 | `Preserve Dungeon Side` | Planned setting only. | Documented for future work, not enforced yet, and may not appear in every config UI until that implementation is finished. |
 | `Preserve Biome Features` | Planned setting only. | Documented for future work, not enforced yet, and may not appear in every config UI until that implementation is finished. |
@@ -372,7 +398,7 @@ Dynamic Worlds now fully supports vanilla pylon preservation and relocation thro
 **Compatibility:**
 - Biome Dowser only works with vanilla pylons.
 - Custom modded pylon implementations are not currently supported.
-- For a full reference on the Biome Dowser system, see `BIOME_DOWSER_DOCUMENTATION.md`.
+- For broader multiplayer/server setup guidance, see the [server admin guide](./SERVER_ADMIN_GUIDE.md).
 
 ## Compatibility
 
@@ -380,8 +406,8 @@ Dynamic Worlds now fully supports vanilla pylon preservation and relocation thro
 
 Dynamic Worlds works best when:
 
-- you stay in single player
 - you keep the same mod list loaded before and after regen
+- you use multiplayer as an admin-controlled maintenance flow rather than expecting seamless live in-world regeneration
 - the other mods do not fundamentally break Terraria/tModLoader world generation or world reload flow
 
 ### Modded Tiles, Walls, Items, and NPCs
@@ -406,6 +432,26 @@ Compatibility is weaker for:
 Dynamic Worlds does generic best-effort tile entity extra-data restore for anchored tiles, but special-case repair currently only exists for vanilla pylons.
 
 ## FAQ
+
+### Can I use this on multiplayer servers?
+
+Yes, with an important distinction: multiplayer regen is handled as a server maintenance flow.
+
+When a server admin runs `/regenworld`, Dynamic Worlds:
+
+- snapshots the world and preserved data
+- announces a countdown
+- disconnects players
+- regenerates and restores the world on the server
+- lets players reconnect and returns them to a valid spawn
+
+Tool syncing, zone syncing, permissions, and scheduled multiplayer regen are supported. `/multiregen` is still single-player only.
+
+### Can I schedule regen by real-world days instead of Terraria days?
+
+Yes. Set `Scheduled Regen Mode` to `RealWorldDays` and choose the interval with `Scheduled Regen Interval (Days)`.
+
+That works in both single-player and multiplayer, though multiplayer also requires `Enable Scheduled Multiplayer Regen` if you want the automatic scheduler to queue server regens.
 
 ### Does regeneration force me out of the world, or does it happen while I keep playing?
 

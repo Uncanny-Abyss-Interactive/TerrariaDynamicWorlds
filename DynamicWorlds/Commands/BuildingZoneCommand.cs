@@ -8,7 +8,7 @@ namespace DynamicWorlds
 {
 	public class BuildingZoneCommand : ModCommand
 	{
-		public override CommandType Type => CommandType.Chat;
+		public override CommandType Type => CommandType.World | CommandType.Console;
 
 		public override string Command => "dwzone";
 
@@ -39,6 +39,13 @@ namespace DynamicWorlds
 						caller.Reply("Usage: /dwzone clear <zone_id>", Color.Yellow);
 						return;
 					}
+
+					if (!DynamicWorldsPermissions.CanManageZones(caller, out string deniedReason))
+					{
+						DynamicWorldsPermissions.ReplyDenied(caller, deniedReason);
+						return;
+					}
+
 					if (int.TryParse(args[1], out int zoneId))
 					{
 						RemoveZone(caller, zoneId);
@@ -50,6 +57,12 @@ namespace DynamicWorlds
 					break;
 
 				case "clearall":
+					if (!DynamicWorldsPermissions.CanManageZones(caller, out string clearDeniedReason))
+					{
+						DynamicWorldsPermissions.ReplyDenied(caller, clearDeniedReason);
+						return;
+					}
+
 					ClearAllZones(caller);
 					break;
 
@@ -81,13 +94,6 @@ namespace DynamicWorlds
 
 		private void RemoveZone(CommandCaller caller, int zoneId)
 		{
-			if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
-			{
-				DynamicWorldsNet.RequestRemoveStructureZoneById(zoneId);
-				caller.Reply($"Requested removal of structure zone #{zoneId}.", Color.LightBlue);
-				return;
-			}
-
 			if (StructureAnchorSystem.Zones.TryGetValue(zoneId, out var zone))
 			{
 				StructureAnchorSystem.Zones.Remove(zoneId);
@@ -102,13 +108,6 @@ namespace DynamicWorlds
 
 		private void ClearAllZones(CommandCaller caller)
 		{
-			if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient)
-			{
-				DynamicWorldsNet.RequestClearStructureZones();
-				caller.Reply("Requested removal of all structure zones.", Color.LightBlue);
-				return;
-			}
-
 			int count = StructureAnchorSystem.Zones.Count;
 			if (count == 0)
 			{

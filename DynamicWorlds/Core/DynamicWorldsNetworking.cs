@@ -441,6 +441,12 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestApplyAnchorRectangle:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 start = DynamicWorldsNet.ReadPoint16(reader);
                         Point16 end = DynamicWorldsNet.ReadPoint16(reader);
                         bool removing = reader.ReadBoolean();
@@ -478,6 +484,12 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestApplyEraseRectangle:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 start = DynamicWorldsNet.ReadPoint16(reader);
                         Point16 end = DynamicWorldsNet.ReadPoint16(reader);
                         bool removing = reader.ReadBoolean();
@@ -508,6 +520,12 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestCreateStructureZone:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 topLeft = DynamicWorldsNet.ReadPoint16(reader);
                         Point16 bottomRight = DynamicWorldsNet.ReadPoint16(reader);
                         if (StructureAnchorSystem.TryCreateZone(topLeft, bottomRight, out BuildingZone zone, out string message))
@@ -525,6 +543,12 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestRemoveStructureZoneAt:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 clickPos = DynamicWorldsNet.ReadPoint16(reader);
                         if (StructureAnchorSystem.RemoveZoneAt(clickPos, out int removedZoneId, out string message))
                         {
@@ -542,7 +566,11 @@ namespace DynamicWorlds
                     if (Main.netMode == NetmodeID.Server)
                     {
                         int zoneId = reader.ReadInt32();
-                        if (StructureAnchorSystem.RemoveZoneById(zoneId, out string message))
+                        if (!DynamicWorldsPermissions.CanManageZones(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                        }
+                        else if (StructureAnchorSystem.RemoveZoneById(zoneId, out string message))
                         {
                             DynamicWorldsNet.SendStructureZoneRemove(zoneId);
                             DynamicWorldsNet.SendClientMessage(whoAmI, message, new Color(255, 150, 100));
@@ -557,24 +585,37 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestClearStructureZones:
                     if (Main.netMode == NetmodeID.Server)
                     {
-                        List<int> zoneIds = new List<int>(StructureAnchorSystem.Zones.Keys);
-                        int removedCount = StructureAnchorSystem.ClearAllZones();
-                        foreach (int zoneId in zoneIds)
-                            DynamicWorldsNet.SendStructureZoneRemove(zoneId);
+                        if (!DynamicWorldsPermissions.CanManageZones(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                        }
+                        else
+                        {
+                            List<int> zoneIds = new List<int>(StructureAnchorSystem.Zones.Keys);
+                            int removedCount = StructureAnchorSystem.ClearAllZones();
+                            foreach (int zoneId in zoneIds)
+                                DynamicWorldsNet.SendStructureZoneRemove(zoneId);
 
-                        string message = removedCount == 0
-                            ? "No zones to clear."
-                            : $"Cleared all {removedCount} structure zone{(removedCount == 1 ? "" : "s")}.";
-                        DynamicWorldsNet.SendClientMessage(
-                            whoAmI,
-                            message,
-                            removedCount == 0 ? Color.Yellow : new Color(255, 150, 100));
+                            string message = removedCount == 0
+                                ? "No zones to clear."
+                                : $"Cleared all {removedCount} structure zone{(removedCount == 1 ? "" : "s")}.";
+                            DynamicWorldsNet.SendClientMessage(
+                                whoAmI,
+                                message,
+                                removedCount == 0 ? Color.Yellow : new Color(255, 150, 100));
+                        }
                     }
                     break;
 
                 case DynamicWorldsPacketType.RequestCreateBiomeZone:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 topLeft = DynamicWorldsNet.ReadPoint16(reader);
                         Point16 bottomRight = DynamicWorldsNet.ReadPoint16(reader);
                         Dictionary<TeleportPylonType, BiomeDowserPylonPreferences> preferences = DynamicWorldsNet.ReadBiomePreferenceMap(reader);
@@ -600,6 +641,12 @@ namespace DynamicWorlds
                 case DynamicWorldsPacketType.RequestRemoveBiomeZoneAt:
                     if (Main.netMode == NetmodeID.Server)
                     {
+                        if (!DynamicWorldsPermissions.CanEditWorldTools(whoAmI, out string deniedReason))
+                        {
+                            DynamicWorldsNet.SendClientMessage(whoAmI, deniedReason, new Color(255, 120, 120));
+                            break;
+                        }
+
                         Point16 clickPos = DynamicWorldsNet.ReadPoint16(reader);
                         if (BiomeDowserSystem.RemoveZoneAt(clickPos, out int removedZoneId, out string message))
                         {

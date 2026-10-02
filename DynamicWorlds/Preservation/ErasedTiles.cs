@@ -457,10 +457,9 @@ namespace DynamicWorlds
 
         public override void RightClick(Player player)
         {
-            var config = ModContent.GetInstance<DynamicWorldsConfig>();
-            if (!config.AllowCheats)
+            if (!DynamicWorldsPermissions.CanUseCheats(player, out string deniedReason))
             {
-                Main.NewText("Cheats are disabled. Enable 'Allow Cheats' in the mod config.", 255, 80, 80);
+                Main.NewText(deniedReason, 255, 80, 80);
                 return;
             }
 

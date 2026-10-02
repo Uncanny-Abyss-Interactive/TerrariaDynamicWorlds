@@ -421,7 +421,7 @@ namespace DynamicWorlds
             var scoredCandidates = new List<(ZoneRestorePlacement placement, int score)>(validCandidates.Count);
             foreach (var candidate in validCandidates)
             {
-                int score = ScoreBiomeCentrality(candidate.centerX, mode);
+                int score = ScorePlacement(candidate.placement, candidate.centerX, mode);
                 scoredCandidates.Add((candidate.placement, score));
                 bestScore = Math.Max(bestScore, score);
             }
@@ -437,6 +437,17 @@ namespace DynamicWorlds
             int chosenIndex = (WorldGen.genRand ?? Main.rand).Next(preferredCandidates.Count);
             Zone.RestoreToPlacement(preferredCandidates[chosenIndex].placement, "[BiomeDowser]");
             return true;
+        }
+
+        private int ScorePlacement(ZoneRestorePlacement placement, int candidateCenterX, BiomeDowserPlacementMode mode)
+        {
+            Point16 pylonTopLeft = new Point16(
+                (short)(placement.TopLeft.X + PylonOffset.X),
+                (short)(placement.TopLeft.Y + PylonOffset.Y));
+
+            int score = ScoreBiomeCentrality(candidateCenterX, mode);
+            score += ScoreFeatureProximity(pylonTopLeft);
+            return score;
         }
 
         private ZoneRestorePlacement PredictRestorePlacement(int targetCenterX, BiomeDowserPlacementMode mode)
@@ -485,8 +496,8 @@ namespace DynamicWorlds
         {
             targetCenterX = SnapToNearestOceanWaterColumn(targetCenterX, Math.Max(6, Math.Min(18, Zone.Height / 2)));
             int waterSurface = FindWaterSurfaceY(targetCenterX);
-            int exposedHeight = Math.Clamp(Zone.Height / 2, 3, Math.Max(3, Zone.Height - 2));
-            int targetTopY = Math.Max(12, waterSurface - exposedHeight);
+            int boatFloorRelativeY = FindBoatFloorRelativeY();
+            int targetTopY = Math.Max(12, waterSurface - boatFloorRelativeY - 1);
             return BuildPlacementFromTopY(targetCenterX, targetTopY, skipSupportBridging: true);
         }
 
@@ -532,6 +543,65 @@ namespace DynamicWorlds
         {
             return ScoreBiomeSpanDirection(candidateCenterX, mode, -1)
                 + ScoreBiomeSpanDirection(candidateCenterX, mode, 1);
+        }
+
+        private int ScoreFeatureProximity(Point16 pylonTopLeft)
+        {
+            int score = 0;
+
+            if (PylonType == TeleportPylonType.GlowingMushroom)
+                score += ScoreMushroomPlacement(pylonTopLeft);
+
+            if (PreferAetherCavern)
+                score += ScoreAetherPlacement(pylonTopLeft);
+
+            return score;
+        }
+
+        private int ScoreMushroomPlacement(Point16 pylonTopLeft)
+        {
+            ZoneTileBounds zoneBounds = GetRestoredZoneBounds(pylonTopLeft);
+            Rectangle broadArea = CreateArea(
+                zoneBounds.TopLeft.X - 28,
+                zoneBounds.TopLeft.Y - 20,
+                zoneBounds.BottomRight.X + 28,
+                zoneBounds.BottomRight.Y + 20);
+            Rectangle tightArea = CreateArea(
+                pylonTopLeft.X - 24,
+                pylonTopLeft.Y - 18,
+                pylonTopLeft.X + 24,
+                pylonTopLeft.Y + 22);
+
+            int broadMushroomTiles = CountNearbyGlowingMushroomTiles(broadArea);
+            int tightMushroomTiles = CountNearbyGlowingMushroomTiles(tightArea);
+            int giantMushrooms = CountNearbyGiantGlowingMushrooms(broadArea);
+
+            return broadMushroomTiles * 2
+                + tightMushroomTiles * 4
+                + giantMushrooms * 90;
+        }
+
+        private int ScoreAetherPlacement(Point16 pylonTopLeft)
+        {
+            EnsureAetherSample();
+            if (_cachedAetherCenter == null)
+                return 0;
+
+            ZoneTileBounds zoneBounds = GetRestoredZoneBounds(pylonTopLeft);
+            Point16 shimmerCenter = _cachedAetherCenter.Value;
+            int dx = DistanceToRange(shimmerCenter.X, zoneBounds.TopLeft.X, zoneBounds.BottomRight.X);
+            int dy = DistanceToRange(shimmerCenter.Y, zoneBounds.TopLeft.Y, zoneBounds.BottomRight.Y);
+
+            int proximityScore = Math.Max(0, 420 - (dx * 4) - (dy * 2));
+
+            bool preferLeftSide = Zone.CenterX <= shimmerCenter.X;
+            int sideGap = preferLeftSide
+                ? Math.Max(0, shimmerCenter.X - zoneBounds.BottomRight.X)
+                : Math.Max(0, zoneBounds.TopLeft.X - shimmerCenter.X);
+            int targetGap = Math.Max(3, Math.Min(8, Zone.Width / 5));
+            int clearanceScore = Math.Max(0, 160 - Math.Abs(sideGap - targetGap) * 16);
+
+            return proximityScore + clearanceScore;
         }
 
         private int ScoreBiomeSpanDirection(int candidateCenterX, BiomeDowserPlacementMode mode, int direction)
@@ -827,10 +897,33 @@ namespace DynamicWorlds
 
             return mode switch
             {
-                BiomeDowserPlacementMode.Underground => pylonTopLeft.Y > Main.worldSurface,
+                BiomeDowserPlacementMode.Underground => !IsSurfaceLikePlacement(pylonTopLeft),
                 BiomeDowserPlacementMode.Floating => pylonTopLeft.Y < Main.worldSurface - 24,
-                _ => pylonTopLeft.Y <= Main.worldSurface,
+                _ => IsSurfaceLikePlacement(pylonTopLeft),
             };
+        }
+
+        private bool IsSurfaceLikePlacement(Point16 pylonTopLeft)
+        {
+            const int maxDistanceFromLocalGround = 14;
+            const int sampleSpacing = 1;
+            int pylonBottomY = pylonTopLeft.Y + 3;
+            int successfulSamples = 0;
+            int totalSamples = 0;
+
+            for (int offsetX = 0; offsetX <= 2; offsetX += sampleSpacing)
+            {
+                int sampleX = pylonTopLeft.X + offsetX;
+                if (!WorldGen.InWorld(sampleX, pylonBottomY, 10))
+                    continue;
+
+                totalSamples++;
+                int localGroundY = BuildingZone.FindGroundY(sampleX, 10);
+                if (Math.Abs(localGroundY - pylonBottomY) <= maxDistanceFromLocalGround)
+                    successfulSamples++;
+            }
+
+            return totalSamples > 0 && successfulSamples >= Math.Max(1, totalSamples - 1);
         }
 
         private static IEnumerable<Point16> EnumerateFootprintTiles(Point16 pylonTopLeft)
@@ -939,7 +1032,7 @@ namespace DynamicWorlds
             bool result = PylonType switch
             {
                 TeleportPylonType.SurfacePurity =>
-                    pylonTopLeft.Y <= Main.worldSurface &&
+                    IsSurfaceLikePlacement(pylonTopLeft) &&
                     !IsBeachCandidate(pylonTopLeft) &&
                     !sceneMetrics.EnoughTilesForJungle &&
                     !sceneMetrics.EnoughTilesForSnow &&
@@ -1539,6 +1632,71 @@ namespace DynamicWorlds
             return BuildPlacementFromBottomY(targetCenterX, targetBottomY, skipSupportBridging);
         }
 
+        private int FindBoatFloorRelativeY()
+        {
+            int bestRelativeY = Math.Clamp(Zone.Height / 2, 0, Math.Max(0, Zone.Height - 1));
+            int bestScore = int.MinValue;
+
+            for (int relY = 0; relY < Zone.Height; relY++)
+            {
+                int solidCount = 0;
+                int walkableCount = 0;
+
+                for (int relX = 0; relX < Zone.Width; relX++)
+                {
+                    if (!TryGetSavedTileAtRelative(relX, relY, out AnchoredTileData tileData) || !IsSavedSolidTile(tileData))
+                        continue;
+
+                    solidCount++;
+                    if (HasSavedHeadroom(relX, relY))
+                        walkableCount++;
+                }
+
+                if (solidCount == 0)
+                    continue;
+
+                int score = (walkableCount * 24) + (solidCount * 4) + relY;
+                if (score > bestScore || (score == bestScore && relY > bestRelativeY))
+                {
+                    bestScore = score;
+                    bestRelativeY = relY;
+                }
+            }
+
+            return bestRelativeY;
+        }
+
+        private bool TryGetSavedTileAtRelative(int relX, int relY, out AnchoredTileData tileData)
+        {
+            var worldPoint = new Point16(
+                (short)(Zone.TopLeft.X + relX),
+                (short)(Zone.TopLeft.Y + relY));
+            return Zone.Tiles.TryGetValue(worldPoint, out tileData);
+        }
+
+        private static bool IsSavedSolidTile(AnchoredTileData tileData)
+        {
+            return tileData.Active
+                && !tileData.IsActuated
+                && Main.tileSolid[tileData.TileType]
+                && !TileID.Sets.Platforms[tileData.TileType];
+        }
+
+        private bool HasSavedHeadroom(int relX, int relY)
+        {
+            for (int offset = 1; offset <= 2; offset++)
+            {
+                int aboveY = relY - offset;
+                if (aboveY < 0)
+                    continue;
+
+                if (TryGetSavedTileAtRelative(relX, aboveY, out AnchoredTileData aboveTile) && IsSavedSolidTile(aboveTile))
+                    return false;
+            }
+
+            return true;
+        }
+
         public static void ResetAetherCache()
         {
             _cachedAetherCenter = null;
@@ -1589,7 +1747,7 @@ namespace DynamicWorlds
         {
             bool preferLeftSide = Zone.CenterX <= shimmerCenter.X;
             int shellColumn = FindAetherShellColumn(shimmerCenter, preferLeftSide);
-            int clearance = Math.Max(6, Math.Min(12, Zone.Width / 4));
+            int clearance = Math.Max(3, Math.Min(8, Zone.Width / 5));
             int targetCenterX = preferLeftSide
                 ? shellColumn - GetZoneRightSpanWithPadding() - clearance
                 : shellColumn + GetZoneLeftSpanWithPadding() + clearance;

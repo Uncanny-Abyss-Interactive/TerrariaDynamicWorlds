@@ -358,7 +358,7 @@ namespace DynamicWorlds
                 Main.MenuUI.SetState(_loadingUi);
         }
 
-        private static void TryCreatePreRegenBackup(PendingRegenContext pending)
+        internal static void TryCreatePreRegenBackup(PendingRegenContext pending)
         {
             if (pending == null || string.IsNullOrWhiteSpace(pending.SourceWorldPath))
                 return;
