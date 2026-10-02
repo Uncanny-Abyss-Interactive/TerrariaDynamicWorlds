@@ -88,6 +88,11 @@ SERVER_CHECKS.update("microfix.player_target_" + name for name in (
     "console_requires_name"))
 
 
+CLIENT_CHECKS.update("microfix.loading_layout_" + name for name in (
+    "800_short", "800_long", "1280_short", "1280_long", "unicode_text_elements",
+    "seed_unchanged", "screenshots", "state_restored"))
+
+
 class LiveValidationError(RuntimeError):
     pass
 
@@ -322,6 +327,8 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
                     for filename in ("client-result.json", "client.png"):
                         if (root / filename).exists():
                             shutil.copy2(root / filename, evidence / filename)
+                    if (root / "loading-layout").is_dir():
+                        shutil.copytree(root / "loading-layout", evidence / "loading-layout", dirs_exist_ok=True)
             if deploy.sha256(artifact) != artifact_hash or deploy.sha256(mods / "DynamicWorlds.tmod") != artifact_hash:
                 raise LiveValidationError("The candidate mod changed during live validation.")
         summary["status"] = "passed"

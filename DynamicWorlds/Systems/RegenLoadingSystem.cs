@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -613,8 +614,55 @@ namespace DynamicWorlds
         }
     }
 
+    internal readonly record struct RegenLoadingLayout(
+        Rectangle Panel, Rectangle Bar, Vector2 MessagePosition, Vector2 DetailPosition,
+        Vector2 PercentagePosition, string Message, string Detail);
+
     internal sealed class RegenLoadingUI : UIState
     {
+        internal static RegenLoadingLayout CreateLayout(int screenWidth, int screenHeight, string message, string detail)
+        {
+            int panelWidth = Math.Min(620, screenWidth - 80);
+            const int panelHeight = 230;
+            Rectangle panel = new Rectangle((screenWidth - panelWidth) / 2,
+                (screenHeight - panelHeight) / 2, panelWidth, panelHeight);
+            Rectangle bar = new Rectangle(panel.X + 36, panel.Bottom - 74, panel.Width - 72, 24);
+            // Leave room for the text outline at both edges of the content area.
+            float textWidth = bar.Width - 4f;
+            return new RegenLoadingLayout(panel, bar,
+                new Vector2(panel.Center.X, panel.Y + 90),
+                new Vector2(panel.Center.X, panel.Y + 126),
+                new Vector2(bar.Right - 2, bar.Bottom + 10),
+                FitDisplayText(message, textWidth, 1f),
+                FitDisplayText(detail, textWidth, 0.9f));
+        }
+
+        private static string FitDisplayText(string text, float maxWidth, float scale)
+        {
+            // Only the displayed label is shortened; the pending seed stays intact.
+            text = (text ?? string.Empty).Replace('\r', ' ').Replace('\n', ' ');
+            var font = FontAssets.MouseText.Value;
+            if (font.MeasureString(text).X * scale <= maxWidth)
+                return text;
+
+            const string ellipsis = "...";
+            if (font.MeasureString(ellipsis).X * scale > maxWidth)
+                return string.Empty;
+            int[] starts = StringInfo.ParseCombiningCharacters(text);
+            int low = 0, high = starts.Length;
+            while (low < high)
+            {
+                int count = (low + high + 1) / 2;
+                int end = count == starts.Length ? text.Length : starts[count];
+                if (font.MeasureString(text.Substring(0, end) + ellipsis).X * scale <= maxWidth)
+                    low = count;
+                else
+                    high = count - 1;
+            }
+            int prefixLength = low == starts.Length ? text.Length : starts[low];
+            return text.Substring(0, prefixLength) + ellipsis;
+        }
+
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             PendingRegenContext pending = DynamicWorldRegenSystem.CurrentContext;
@@ -638,16 +686,11 @@ namespace DynamicWorlds
                         ? seedLabel
                         : "Preserving anchored tiles, housing, and progression";
 
+            RegenLoadingLayout layout = CreateLayout(Main.screenWidth, Main.screenHeight, message, detail);
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            int panelWidth = Math.Min(620, Main.screenWidth - 80);
-            int panelHeight = 190;
-            Rectangle panel = new Rectangle(
-                (Main.screenWidth - panelWidth) / 2,
-                (Main.screenHeight - panelHeight) / 2,
-                panelWidth,
-                panelHeight);
+            Rectangle panel = layout.Panel;
             Rectangle border = new Rectangle(panel.X - 3, panel.Y - 3, panel.Width + 6, panel.Height + 6);
-            Rectangle bar = new Rectangle(panel.X + 36, panel.Bottom - 64, panel.Width - 72, 24);
+            Rectangle bar = layout.Bar;
             Rectangle fill = new Rectangle(bar.X + 4, bar.Y + 4, (int)((bar.Width - 8) * overallProgress), bar.Height - 8);
 
             float pulse = 0.7f + 0.3f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi * 1.6f);
@@ -670,8 +713,8 @@ namespace DynamicWorlds
 
             Utils.DrawBorderString(
                 spriteBatch,
-                message,
-                new Vector2(panel.Center.X, panel.Y + 94),
+                layout.Message,
+                layout.MessagePosition,
                 new Color(200, 230, 255),
                 1f,
                 0.5f,
@@ -679,8 +722,8 @@ namespace DynamicWorlds
 
             Utils.DrawBorderString(
                 spriteBatch,
-                detail,
-                new Vector2(panel.Center.X, panel.Y + 126),
+                layout.Detail,
+                layout.DetailPosition,
                 new Color(150, 185, 220),
                 0.9f,
                 0.5f,
@@ -689,7 +732,7 @@ namespace DynamicWorlds
             Utils.DrawBorderString(
                 spriteBatch,
                 $"{overallProgress:P1}",
-                new Vector2(bar.Right, bar.Y - 26),
+                layout.PercentagePosition,
                 Color.White,
                 0.95f,
                 1f,

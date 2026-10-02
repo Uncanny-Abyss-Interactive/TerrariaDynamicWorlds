@@ -280,6 +280,8 @@ public sealed class ClientSmokeSystem : ModSystem
         {
             foreach (var check in MicrofixChecks.ClientChecks())
                 checks[check.Key] = check.Value;
+            foreach (var check in LoadingLayoutChecks.ClientChecks())
+                checks[check.Key] = check.Value;
             foreach (var check in _toolGiftChecks)
                 checks[check.Key] = check.Value;
             checks["microfix.tools_disabled_setting_survived_regeneration"] =
