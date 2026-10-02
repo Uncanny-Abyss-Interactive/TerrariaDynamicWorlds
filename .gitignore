@@ -1,11 +1,16 @@
 # Output artifacts
-/bin/
-/obj/
+**/bin/
+**/obj/
+**/compile_temp/
 *.dll
 *.pdb
 
 # Packaged mod
-/*.tmod
+*.tmod
+artifacts/
+.artifacts/
+__pycache__/
+*.pyc
 
 # IDE-specific
 .vscode/

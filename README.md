@@ -8,6 +8,9 @@ Single-player is still the most polished path, but the mod now also supports mul
 
 If you are running a server, start with the new [server admin guide](./SERVER_ADMIN_GUIDE.md).
 
+For development builds and automatic Git-to-tModLoader deployment, see the
+[deployment guide](./DEPLOYMENT.md).
+
 ## What Dynamic Worlds Currently Does
 
 - Runs `/regenworld [seed]` through a real loading screen instead of freezing the live game.

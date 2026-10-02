@@ -1,0 +1,151 @@
+{
+  "source_commit": "496e5cf",
+  "mod_version": "0.5.0",
+  "local_package_sha256": "33183b09f7fa629feeb4069b8bb395496a2516b0705ab110325d87adee163af9",
+  "workshop_package_sha256": "6d96d18e27723af7eb835eadbff7ec6a9a1bf8f73df99adcb4bbc925d228d2b1",
+  "compiled_source_count": 28,
+  "matching_source_count": 28,
+  "method": "Embedded portable-PDB document SHA-1 compared with UTF-8 BOM plus source text, matching tModLoader Roslyn encoding. All compiled source files present, no extra source files. Local and Workshop DLL differences are limited to timestamp and module GUID.",
+  "files": [
+    {
+      "path": "DynamicWorlds/UI/BiomeDowserSettingsUI.cs",
+      "pdb_sha1": "2e14725400594db19ee6a491deef790def5f7386",
+      "source_sha256": "58e7cad810ccd9bc2f85ce0473c8b5c8d3107025bda03ae36d9473496d9bf7ef"
+    },
+    {
+      "path": "DynamicWorlds/UI/GuideDialogue.cs",
+      "pdb_sha1": "3706cf7b21ed16fac922de1f568a5e8071cb1236",
+      "source_sha256": "127b94b6be269ad760db591ef3cde58c2551f38836530c5bd55fce3f3c96fbfc"
+    },
+    {
+      "path": "DynamicWorlds/UI/player.cs",
+      "pdb_sha1": "f7108ac5f42cd5b8cbc0580e6094054f1eae3c60",
+      "source_sha256": "2eb69dd9447c2980c01626a16ae39a4956c310ec97ff3618c0188596075a70af"
+    },
+    {
+      "path": "DynamicWorlds/Tools/PrefabTool.cs",
+      "pdb_sha1": "16d00635429fa5cde2a1cd805bb60cb919c6faf7",
+      "source_sha256": "d800fd64f6def95e07693ed5c61861bee92d9c9f1fe90183ba08fb17d04848e3"
+    },
+    {
+      "path": "DynamicWorlds/Core/DynamicWorldsConfig.cs",
+      "pdb_sha1": "ed978a3b055f2b2fbaddd238d588134d9cd46a64",
+      "source_sha256": "c3bb66a7e8782e072c70900753d63679e39988bec265d3c5fbe1370f35e1a25b"
+    },
+    {
+      "path": "DynamicWorlds/Core/DynamicWorldsPermissions.cs",
+      "pdb_sha1": "a1a7388d5bd5145450f993318cd5288223713583",
+      "source_sha256": "c8cc4d443c5669afd08a3e5c267c4369b9a764567459436427e0eb6ce4e28436"
+    },
+    {
+      "path": "DynamicWorlds/Core/DynamicWorldsNetworking.cs",
+      "pdb_sha1": "3d1bcd6aa8c5219f4f7540fdfa56880a5585e01c",
+      "source_sha256": "55c79c163f53a47447b7dbf63134248264ac6d2e7db34cb7582644aeddabbd4a"
+    },
+    {
+      "path": "DynamicWorlds/Core/DynamicWorlds.cs",
+      "pdb_sha1": "47d1879e1d0e4efece3a3b4f386feacc6a44ff8f",
+      "source_sha256": "7ea137bf7536c692bd21b08b3c8535ada606143aa644de44064b70da276e3df5"
+    },
+    {
+      "path": "DynamicWorlds/Integration/CalamityCompat.cs",
+      "pdb_sha1": "3fd6c14c2a5c6bf47567d8a92909265689f40ffc",
+      "source_sha256": "0454094dd16021bed4f96b17b7e802416012bb0cb53c88d45c2fcd393e8c30cf"
+    },
+    {
+      "path": "DynamicWorlds/Preservation/BiomeDowser.cs",
+      "pdb_sha1": "1638380381b82d373e4911fc1a6f78dde0c64b32",
+      "source_sha256": "900577c96cd67e770df17760ba79a62a2630d87e445450307d0eb328dc10e476"
+    },
+    {
+      "path": "DynamicWorlds/Preservation/PylonAnchor.cs",
+      "pdb_sha1": "744d326bbf5e7264b47aed45f3c69fc2c108e552",
+      "source_sha256": "447d14c0266e421289964bce1ce314da40b38980a385a1eb6f064c63da66fdec"
+    },
+    {
+      "path": "DynamicWorlds/Preservation/StructureAnchor.cs",
+      "pdb_sha1": "a12bb381a73305e9f41c258028809a09e678689d",
+      "source_sha256": "d3992531928d7c5257ebe620bc54ad45a0a44926160c232852b565157c055c9b"
+    },
+    {
+      "path": "DynamicWorlds/Preservation/AnchoredTiles.cs",
+      "pdb_sha1": "a85d915f2f98ba26c2d71aa6a046932793425600",
+      "source_sha256": "85ad95c2137d64536ba27c3748fc8ff4f2d9e6e6dcd940969393161c92ad3c65"
+    },
+    {
+      "path": "DynamicWorlds/Preservation/ErasedTiles.cs",
+      "pdb_sha1": "2a9a36afe88a82f445be8fc968e09a45bdbe621c",
+      "source_sha256": "2aae4798b5b924d64ff4857513ab64cded6e2e4e4e3dfeda26ad7468d592da95"
+    },
+    {
+      "path": "DynamicWorlds/Commands/GiveToolsCommand.cs",
+      "pdb_sha1": "e4510df347083a1054582ad123d5c216a525b983",
+      "source_sha256": "ba69a55c4deaa92a8d0ac764ac1a069f2b1b239a62c3bf869428e04721e11a6d"
+    },
+    {
+      "path": "DynamicWorlds/Commands/ZoneInfoCommands.cs",
+      "pdb_sha1": "8ce9fb48b01d14d2bc5071f8760d1cd561fdface",
+      "source_sha256": "032342e095d597a94e2216c91492ff4981938a6d8ea688a742dd70b8469364d6"
+    },
+    {
+      "path": "DynamicWorlds/Commands/CheatCommands.cs",
+      "pdb_sha1": "0c02ba06b50f1bb33bbd1ac3a543b9336bb2c30c",
+      "source_sha256": "e63f81c34d6ca17b25f7a08d989f7bfddc7da808b06a4e5ba99f20dc38e68963"
+    },
+    {
+      "path": "DynamicWorlds/Commands/regenworldcommand.cs",
+      "pdb_sha1": "00c8e280e8059320ed1bf8089bdb66b1533e9e00",
+      "source_sha256": "274374a523fe7130b4bf8e7b29ffbe8097c89305b1b1f62149f9adc6fdbcbf45"
+    },
+    {
+      "path": "DynamicWorlds/Commands/MultiplayerRegenConfigCommand.cs",
+      "pdb_sha1": "aceb0e92548df7e8fa213f577abe11065d46af1d",
+      "source_sha256": "cd78123de6145858fe8b16b63fb0e254f0ed9b31035f8ab5d224c9a3f4e19ad6"
+    },
+    {
+      "path": "DynamicWorlds/Commands/BuildingZoneCommand.cs",
+      "pdb_sha1": "3d1062ef16bf34045a483b9b07094381c9834dbd",
+      "source_sha256": "83447378d019e39e5612db4c1ff9a2d5ed0d75b53d990d33c1ce5549c0a05ba7"
+    },
+    {
+      "path": "DynamicWorlds/Commands/UtilityCommands.cs",
+      "pdb_sha1": "3c8e513b3a79aef97d39c64fbf828f80b411af48",
+      "source_sha256": "0a263df3f8ad806adfe0d23b7144b3d28a5a12f6be88e01bad4e338ce39dbaaa"
+    },
+    {
+      "path": "DynamicWorlds/Commands/PermissionCommands.cs",
+      "pdb_sha1": "cc76fe5c79cd287a2b27c27d07fca710ca5e82bf",
+      "source_sha256": "97aa0a272b3a75d65c0c713eebc35b6e111296cdf03e4c2ccc2958d4f171e24a"
+    },
+    {
+      "path": "DynamicWorlds/Systems/PylonRestoreHelper.cs",
+      "pdb_sha1": "ae18ecad5bda86a5f50261a6835e9c9402822cc2",
+      "source_sha256": "e8a62bb7279bfbeb7c8c1e3109f31dc37ee72d292d5e04a1f17c53a68d16a0d5"
+    },
+    {
+      "path": "DynamicWorlds/Systems/RegenLoadingSystem.cs",
+      "pdb_sha1": "c3f5e5fe65d8b4484080d5d9c50b381708a18d78",
+      "source_sha256": "3882a511fbfd5620c38ee897e3696146d35b73649c1fce1e291b0b96c870040d"
+    },
+    {
+      "path": "DynamicWorlds/Systems/WorldProgress.cs",
+      "pdb_sha1": "ab00963309ed7397b876980796ab49b7a62a8572",
+      "source_sha256": "1881314406bc0cd4dc084e735368a227f0e82b9df9f9c631373287edf39ebd32"
+    },
+    {
+      "path": "DynamicWorlds/Systems/WorldRegenScheduler.cs",
+      "pdb_sha1": "408738255cc665b165c2dabc35f28c8f899b3101",
+      "source_sha256": "4520203c67e07a6858f702eb4152c843f9aa259dd25f1aa48907fb02d3ec9289"
+    },
+    {
+      "path": "DynamicWorlds/Systems/WorldToolOverlayHelper.cs",
+      "pdb_sha1": "f3c3c414674a10cc5dc4c9c95c9cf8742c169270",
+      "source_sha256": "af99a278f6cc8b1462883b18898e7c7b8695ff974a4ad7d532a71ef4fd33cc11"
+    },
+    {
+      "path": "DynamicWorlds/Systems/MultiplayerRegenSystem.cs",
+      "pdb_sha1": "d28f89bb75b3bfd7cff708b8e888e6ae7eea4d7e",
+      "source_sha256": "35867e17a44d5254e30ff90d26bd35ad9445d9c89fc781ca3f4e18861c57d357"
+    }
+  ]
+}
