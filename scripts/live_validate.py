@@ -33,6 +33,7 @@ CLIENT_CHECKS.update(name + suffix for name in ("RealityAnchor", "RealityEraser"
 CLIENT_CHECKS.update({"initial_seed_matches", "initial_saved_fixtures_verified", "production_regeneration_requested",
                       "production_regeneration_busy_observed", "production_regeneration_idle", "world_unloaded_and_reloaded",
                       "regeneration_seed_changed", "saved_structure_and_chest_reloaded", "unprotected_sentinel_replaced"})
+CLIENT_CHECKS.update({"microfix.guide_vanilla_buttons", "microfix.guide_dialogue_unchanged"})
 
 
 class LiveValidationError(RuntimeError):

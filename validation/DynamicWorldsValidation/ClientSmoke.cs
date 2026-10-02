@@ -274,6 +274,8 @@ public sealed class ClientSmokeSystem : ModSystem
 
         try
         {
+            foreach (var check in MicrofixChecks.ClientChecks())
+                checks[check.Key] = check.Value;
             int chestIndex = Chest.FindChest(250, 110);
             checks["saved_anchor_chest_reloaded"] = chestIndex >= 0 &&
                 Main.chest[chestIndex]?.item[0]?.type == ItemID.Torch &&
