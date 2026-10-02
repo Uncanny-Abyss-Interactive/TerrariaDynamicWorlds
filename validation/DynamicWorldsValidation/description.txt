@@ -1,0 +1,1 @@
+Disposable-world integration assertions for Dynamic Worlds. Requires explicit validation environment and marker. Never install in normal gameplay.

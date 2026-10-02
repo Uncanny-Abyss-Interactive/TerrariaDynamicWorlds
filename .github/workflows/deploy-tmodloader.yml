@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Test deployment safeguards
+      - name: Test deployment and live-validation safeguards
         run: python3 -m unittest discover -s tests -v
 
   deploy:
@@ -30,7 +30,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, macOS, dynamic-worlds-tmodloader]
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Check out the pushed commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,7 +50,7 @@ jobs:
             echo 'A newer main commit is queued; skipping this deployment.' >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Build and deploy the exact commit
+      - name: Build, test in live Terraria, and deploy the exact commit
         if: steps.tip.outputs.current == 'true'
         env:
           PYTHONUNBUFFERED: '1'
@@ -58,7 +58,7 @@ jobs:
           DW_DOTNET: /usr/local/share/dotnet/dotnet
         run: python3 scripts/deploy.py --commit "$GITHUB_SHA" --artifacts-dir artifacts
 
-      - name: Retain package and build evidence
+      - name: Retain package, live-test reports, screenshot, and logs
         if: always() && steps.tip.outputs.current == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

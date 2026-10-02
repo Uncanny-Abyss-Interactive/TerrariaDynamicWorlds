@@ -40,6 +40,8 @@ class Settings:
     artifacts_dir: Path
     build_only: bool = False
     dotnet: Path | None = None
+    validate_only: bool = False
+    server_only: bool = False
 
 
 def sha256(path: Path) -> str:
@@ -66,16 +68,24 @@ def resolve_commit(repo: Path, revision: str) -> str:
                            f"{revision}^{{commit}}"], cwd=repo)
 
 
-def archive_source(repo: Path, commit: str, destination: Path) -> Path:
-    """Use Git objects, never a copy of the potentially dirty working tree."""
+def archive_directory(repo: Path, commit: str, destination: Path, relative: str) -> Path:
+    """Export one committed directory without following links."""
+    prefix = PurePosixPath(relative)
+    if prefix.is_absolute() or ".." in prefix.parts or not prefix.parts:
+        raise DeploymentError("Invalid archive directory.")
+    destination.mkdir(parents=True, exist_ok=True)
     archive = destination / "source.tar"
     command_output(["git", "archive", "--format=tar", f"--output={archive}",
-                    commit, MOD_NAME], cwd=repo)
+                    commit, relative], cwd=repo)
     with tarfile.open(archive) as source:
         for member in source:
             name = PurePosixPath(member.name)
-            if name.is_absolute() or ".." in name.parts or not name.parts or name.parts[0] != MOD_NAME:
+            if name.is_absolute() or ".." in name.parts or not name.parts:
                 raise DeploymentError(f"Unsafe Git archive path: {member.name}")
+            if member.isdir() and prefix.parts[:len(name.parts)] == name.parts:
+                continue  # Git may include parent directory entries.
+            if name.parts[:len(prefix.parts)] != prefix.parts:
+                raise DeploymentError(f"Unexpected Git archive path: {member.name}")
             target = destination.joinpath(*name.parts)
             if member.isdir():
                 target.mkdir(parents=True, exist_ok=True)
@@ -85,7 +95,12 @@ def archive_source(repo: Path, commit: str, destination: Path) -> Path:
                     shutil.copyfileobj(incoming, outgoing)
             else:
                 raise DeploymentError(f"Source archive contains an unsupported link or special file: {member.name}")
-    source_dir = destination / MOD_NAME
+    return destination.joinpath(*prefix.parts)
+
+
+def archive_source(repo: Path, commit: str, destination: Path) -> Path:
+    """Use Git objects, never a copy of the potentially dirty working tree."""
+    source_dir = archive_directory(repo, commit, destination, MOD_NAME)
     if not (source_dir / "build.txt").is_file() or not any(source_dir.rglob("*.cs")):
         raise DeploymentError(f"Commit {commit} does not contain a complete {MOD_NAME} source tree.")
     return source_dir
@@ -99,7 +114,7 @@ def source_version(source: Path) -> str:
     raise DeploymentError("Committed build.txt has no version.")
 
 
-def validate_tmod(path: Path, expected_version: str) -> dict[str, str]:
+def validate_tmod(path: Path, expected_version: str, expected_name: str = MOD_NAME) -> dict[str, str]:
     """Check the tML package header, payload hash, identity, and assembly entry."""
     data = path.read_bytes()
     stream = io.BytesIO(data)
@@ -137,8 +152,8 @@ def validate_tmod(path: Path, expected_version: str) -> dict[str, str]:
     if payload_length != len(payload) or hashlib.sha1(payload).digest() != expected_hash:
         raise DeploymentError(f"Package length/hash verification failed: {path}")
     name, version = read_string(), read_string()
-    if name != MOD_NAME or version != expected_version:
-        raise DeploymentError(f"Expected {MOD_NAME} {expected_version}, found {name} {version}.")
+    if name != expected_name or version != expected_version:
+        raise DeploymentError(f"Expected {expected_name} {expected_version}, found {name} {version}.")
     count = read_int()
     if count < 1 or count > len(payload) // 9:
         raise DeploymentError(f"Invalid package file count: {path}")
@@ -149,7 +164,7 @@ def validate_tmod(path: Path, expected_version: str) -> dict[str, str]:
         if unpacked < 0 or stored < 0:
             raise DeploymentError(f"Invalid package entry size: {path}")
         stored_bytes += stored
-        has_assembly |= filename == f"{MOD_NAME}.dll" and unpacked > 0 and stored > 0
+        has_assembly |= filename == f"{expected_name}.dll" and unpacked > 0 and stored > 0
     if not has_assembly or stream.tell() + stored_bytes != len(data):
         raise DeploymentError(f"Package assembly or file table is incomplete: {path}")
     return {"mod_version": version, "tmodloader_version": tml_version}
@@ -159,7 +174,7 @@ def dotnet_runtime(settings: Settings) -> Path:
     return (settings.dotnet or settings.tml_dir / "dotnet" / "dotnet").resolve()
 
 
-def build_mod(settings: Settings, source: Path, stage: Path, log: Path) -> Path:
+def build_mod(settings: Settings, source: Path, stage: Path, log: Path, mod_name: str = MOD_NAME) -> Path:
     runtime = dotnet_runtime(settings)
     loader = settings.tml_dir / "tModLoader.dll"
     if not runtime.is_file() or not os.access(runtime, os.X_OK) or not loader.is_file():
@@ -182,7 +197,7 @@ def build_mod(settings: Settings, source: Path, stage: Path, log: Path) -> Path:
             raise DeploymentError(f"Build did not complete: {exc}. See {log}") from exc
     if result.returncode:
         raise DeploymentError(f"tModLoader build failed (exit {result.returncode}). See {log}")
-    artifact = stage / "Mods" / f"{MOD_NAME}.tmod"
+    artifact = stage / "Mods" / f"{mod_name}.tmod"
     if not artifact.is_file():
         raise DeploymentError(f"Build returned success without {artifact}. See {log}")
     return artifact
@@ -313,6 +328,8 @@ def deploy_artifact(settings: Settings, artifact: Path, receipt: dict) -> dict:
 
 
 def run(settings: Settings) -> dict:
+    if settings.server_only and not settings.validate_only:
+        raise DeploymentError("--server-only requires --validate-only; deployment requires graphical regeneration checks.")
     with deployment_lock(settings.state_dir):
         commit = resolve_commit(settings.repo, settings.commit)
         settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
@@ -341,9 +358,17 @@ def run(settings: Settings) -> dict:
                        built_at=datetime.now(timezone.utc).isoformat())
         write_json(run_dir / "build.json", receipt)
         if not settings.build_only:
+            from live_validate import validate_live
+            receipt["live_validation"] = validate_live(settings, commit, artifact, run_dir, sys.modules[__name__])
+            if sha256(settings.tml_dir / "tModLoader.dll") != loader_hash or sha256(runtime) != runtime_hash:
+                raise DeploymentError("The local runtime changed during live validation; retry after its update finishes.")
+            write_json(run_dir / "build.json", receipt)
+        if not settings.build_only and not settings.validate_only:
             receipt = deploy_artifact(settings, artifact, receipt)
             write_json(run_dir / "deployment.json", receipt)
             print(f"Deployed {MOD_NAME} {version}: {receipt['deployed_path']}")
+        elif settings.validate_only:
+            print(f"Live validation passed; installed mod unchanged. Artifact: {artifact}")
         else:
             print(f"Build verified; live mod unchanged. Artifact: {artifact}")
         print(f"Artifact SHA-256: {receipt['artifact_sha256']}")
@@ -354,7 +379,10 @@ def main(argv: list[str] | None = None) -> int:
     home = Path.home()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--commit", default="HEAD", help="Git revision to archive and build (default: HEAD)")
-    parser.add_argument("--build-only", action="store_true", help="Verify a package without installing it")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--build-only", action="store_true", help="Build a package without running the game or installing it")
+    mode.add_argument("--validate-only", action="store_true", help="Build and run live tests without installing the mod")
+    parser.add_argument("--server-only", action="store_true", help="Run live server tests without the graphical client smoke test")
     parser.add_argument("--tml-dir", type=Path, default=Path(os.environ.get("DW_TML_DIR", home / "Library/Application Support/Steam/steamapps/common/tModLoader")))
     parser.add_argument("--dotnet", type=Path, default=os.environ.get("DW_DOTNET"),
                         help="dotnet executable (default: DW_DOTNET or tModLoader's bundled runtime)")
@@ -366,7 +394,8 @@ def main(argv: list[str] | None = None) -> int:
     settings = Settings(repo, args.commit, args.tml_dir.expanduser().resolve(),
                         args.saves_dir.expanduser().resolve(), args.state_dir.expanduser().resolve(),
                         args.artifacts_dir.expanduser().resolve(), args.build_only,
-                        args.dotnet.expanduser().resolve() if args.dotnet else None)
+                        args.dotnet.expanduser().resolve() if args.dotnet else None,
+                        args.validate_only, args.server_only)
     try:
         run(settings)
     except (DeploymentError, OSError, subprocess.SubprocessError, tarfile.TarError) as exc:

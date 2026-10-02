@@ -1,0 +1,6 @@
+displayName = Dynamic Worlds Validation (TEST ONLY)
+author = Dynamic Worlds
+version = 0.1.0
+modReferences = DynamicWorlds
+side = Both
+buildIgnore = README.md
