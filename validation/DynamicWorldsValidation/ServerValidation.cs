@@ -138,6 +138,8 @@ public sealed class ServerValidationSystem : ModSystem
             Check(check.Key, check.Value, "Anchor cap configuration and admission regression.");
         foreach (var check in SchedulerChecks.ServerChecks())
             Check(check.Key, check.Value, "Multiplayer scheduler enablement regression.");
+        foreach (var check in PlayerTargetChecks.ServerChecks())
+            Check(check.Key, check.Value, "Tool command player targeting regression.");
 
         // Use actual Terraria globals and the production capture/apply implementation.
         Main.hardMode = false;
