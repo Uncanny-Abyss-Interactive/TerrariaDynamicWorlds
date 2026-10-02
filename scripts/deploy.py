@@ -52,6 +52,14 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def runtime_environment() -> dict[str, str]:
+    # tModLoader dumps its entire environment to disk. Never inherit runner,
+    # development, or shell credentials into game/build processes.
+    allowed = {"HOME", "USER", "LOGNAME", "PATH", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE",
+               "SHELL", "__CF_USER_TEXT_ENCODING", "DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR"}
+    return {key: value for key, value in os.environ.items() if key in allowed}
+
+
 def command_output(args: list[str], cwd: Path | None = None) -> str:
     try:
         result = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
@@ -179,7 +187,7 @@ def build_mod(settings: Settings, source: Path, stage: Path, log: Path, mod_name
     loader = settings.tml_dir / "tModLoader.dll"
     if not runtime.is_file() or not os.access(runtime, os.X_OK) or not loader.is_file():
         raise DeploymentError(f"tModLoader or the executable runtime {runtime} was not found. Set --tml-dir and, if needed, --dotnet.")
-    environment = os.environ.copy()
+    environment = runtime_environment()
     # Allow servicing updates within the required .NET major/minor version.
     environment["DOTNET_ROLL_FORWARD"] = "LatestPatch"
     # -build exits before tML's dedicated-server graphics initialization.

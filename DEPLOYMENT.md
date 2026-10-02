@@ -59,6 +59,9 @@ JSON reports require a fresh run ID and every named assertion to pass. Runtime
 errors, early exits, stalled generation, and missing reports fail deployment.
 Owned test processes are stopped on failure, and the temporary saves are removed.
 Reports and logs remain under `artifacts/<commit>-<run>/live-validation/`.
+Game/build subprocesses receive only a small allowlist of environment variables;
+tModLoader's environment-dump files are excluded from retained artifacts.
+The disposable profile skips first-launch welcome and mod-change notices.
 
 Scope: this covers real singleplayer regeneration, save/reload, rendering and
 assets; it does not simulate every mouse interaction, multiplayer networking,

@@ -20,6 +20,21 @@ SPEC.loader.exec_module(live)
 
 
 class ReportTests(unittest.TestCase):
+    def test_credentials_and_environment_dumps_stay_out_of_game_evidence(self):
+        with mock.patch.dict(deploy.os.environ, {"HOME": "/test-home", "PATH": "/bin",
+                                               "GITHUB_TOKEN": "test-secret", "UNFAMILIAR_CREDENTIAL": "another"}, clear=True):
+            self.assertEqual(deploy.runtime_environment(), {"HOME": "/test-home", "PATH": "/bin"})
+        with tempfile.TemporaryDirectory() as folder:
+            runtime = Path(folder) / "runtime"
+            logs = runtime / "tModLoader-Logs"
+            logs.mkdir(parents=True)
+            (logs / "environment-client.log").write_text("never publish this")
+            (logs / "client.log").write_text("runtime evidence")
+            evidence = Path(folder) / "evidence"
+            live.collect_logs(runtime, evidence)
+            self.assertEqual((evidence / "runtime/client.log").read_text(), "runtime evidence")
+            self.assertFalse((evidence / "runtime/environment-client.log").exists())
+
     def test_stale_and_failed_reports_are_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             report = Path(folder) / "result.json"

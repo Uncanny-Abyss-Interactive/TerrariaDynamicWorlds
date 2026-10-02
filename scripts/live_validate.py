@@ -140,14 +140,16 @@ def runtime_directory(root: Path, installation: Path, name: str) -> Path:
 
 
 def read_logs(console: Path, runtime: Path) -> str:
-    paths = [console, *sorted((runtime / "tModLoader-Logs").glob("*.log"))]
+    paths = [console, *(path for path in sorted((runtime / "tModLoader-Logs").glob("*.log"))
+                       if not path.name.startswith("environment-"))]
     return "\n".join(path.read_text(errors="replace") for path in paths if path.is_file())
 
 
 def collect_logs(runtime: Path, evidence: Path):
     logs = runtime / "tModLoader-Logs"
     if logs.exists():
-        shutil.copytree(logs, evidence / runtime.name, dirs_exist_ok=True)
+        shutil.copytree(logs, evidence / runtime.name, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns("environment-*.log"))
 
 
 def assert_no_runtime_errors(console: Path, runtime: Path):
@@ -183,7 +185,7 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
             harness_source = deploy.archive_directory(settings.repo, commit, root / "source",
                                                        f"validation/{HARNESS}")
             harness = deploy.build_mod(settings, harness_source, root, evidence / "harness-build.log", HARNESS)
-            deploy.validate_tmod(harness, deploy.source_version(harness_source), HARNESS)
+            harness_info = deploy.validate_tmod(harness, deploy.source_version(harness_source), HARNESS)
             enabled = ["DynamicWorlds", HARNESS]
             (mods / "enabled.json").write_text(json.dumps(enabled))
             packs = mods / "ModPacks"
@@ -195,7 +197,7 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
             empty_workshop.mkdir()
             world = worlds / f"{WORLD_NAME}.wld"
             server_runtime = runtime_directory(root, settings.tml_dir, "server-runtime")
-            env = os.environ.copy()
+            env = deploy.runtime_environment()
             env.update(DOTNET_ROLL_FORWARD="LatestPatch", FNA_PLATFORM_BACKEND="NONE",
                        DYLD_LIBRARY_PATH=str(settings.tml_dir / "Libraries/Native/OSX"),
                        DW_VALIDATION_RUN_ID=run_id, DW_VALIDATION_ROOT=str(root),
@@ -234,6 +236,13 @@ def validate_live(settings, commit: str, artifact: Path, run_dir: Path, deploy) 
                     shutil.copy2(root / "server-result.json", evidence / "server-result.json")
 
             if not settings.server_only:
+                # Fresh profiles otherwise wait at language/welcome/mod-change screens
+                # before loading mods, where the in-game companion cannot run yet.
+                (root / "config.json").write_text(json.dumps({
+                    "Language": "en-US", "LastLaunchedTModLoaderVersion": harness_info["tmodloader_version"],
+                    "LastLaunchedVersion": 279, "ShowNewUpdatedModsInfo": False,
+                    "DisplayWidth": 800, "DisplayHeight": 720, "Fullscreen": False,
+                }))
                 client_runtime = runtime_directory(root, settings.tml_dir, "client-runtime")
                 client_env = env.copy()
                 client_env.pop("FNA_PLATFORM_BACKEND", None)
