@@ -82,6 +82,12 @@ SERVER_CHECKS.update("microfix.scheduler_" + name for name in (
     "counter_required", "overdue_disabled_quiet", "never_queued_regen"))
 
 
+SERVER_CHECKS.update("microfix.player_target_" + name for name in (
+    "exact_before_prefix", "case_whitespace", "unique_prefix", "ambiguous_prefix",
+    "unknown_name", "inactive_ignored", "duplicate_exact_ambiguous", "caller_fallback",
+    "console_requires_name"))
+
+
 class LiveValidationError(RuntimeError):
     pass
 

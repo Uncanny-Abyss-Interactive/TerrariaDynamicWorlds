@@ -28,18 +28,26 @@ namespace DynamicWorlds
         };
 
         internal static bool TryResolveTargetPlayer(CommandCaller caller, string requestedName, out Player target, out string error)
+            => TryResolveTargetPlayer(Main.player, caller, requestedName, out target, out error);
+
+        internal static bool TryResolveTargetPlayer(IEnumerable<Player> players, CommandCaller caller,
+            string requestedName, out Player target, out string error)
         {
             target = null;
 
             if (!string.IsNullOrWhiteSpace(requestedName))
             {
                 string trimmed = requestedName.Trim();
-                List<Player> matches = Main.player
+                List<Player> activePlayers = players
                     .Where(player => player != null && player.active && player.name != null)
-                    .Where(player =>
-                        string.Equals(player.name, trimmed, StringComparison.OrdinalIgnoreCase) ||
-                        player.name.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase))
                     .ToList();
+                List<Player> matches = activePlayers
+                    .Where(player => string.Equals(player.name, trimmed, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (matches.Count == 0)
+                    matches = activePlayers
+                        .Where(player => player.name.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
 
                 if (matches.Count == 1)
                 {
