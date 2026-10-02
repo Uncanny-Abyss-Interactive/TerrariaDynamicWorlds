@@ -34,6 +34,14 @@ CLIENT_CHECKS.update({"initial_seed_matches", "initial_saved_fixtures_verified",
                       "production_regeneration_busy_observed", "production_regeneration_idle", "world_unloaded_and_reloaded",
                       "regeneration_seed_changed", "saved_structure_and_chest_reloaded", "unprotected_sentinel_replaced"})
 CLIENT_CHECKS.update({"microfix.guide_vanilla_buttons", "microfix.guide_dialogue_unchanged"})
+SERVER_CHECKS.update("microfix.packet_" + name for name in (
+    "server_rejects_anchor_sync", "server_rejects_erase_sync", "server_rejects_structure_upsert",
+    "server_rejects_structure_remove", "server_rejects_biome_upsert", "server_rejects_biome_remove",
+    "server_rejects_sync_before_body", "server_rejects_invalid_counts_before_body", "server_ignores_unknown_type"))
+CLIENT_CHECKS.update("microfix.packet_" + name for name in (
+    "client_anchor_sync", "client_erase_sync", "client_structure_upsert", "client_structure_remove",
+    "client_biome_upsert", "client_biome_remove", "client_ignores_requests_before_body",
+    "client_truncated_sync_is_atomic", "singleplayer_ignores_sync_before_body"))
 
 
 class LiveValidationError(RuntimeError):
