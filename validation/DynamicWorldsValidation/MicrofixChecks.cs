@@ -33,6 +33,8 @@ internal static class MicrofixChecks
             Main.LocalPlayer.SetTalkNPC(previousTalkNpc);
             Main.npc[slot] = previousNpc;
         }
+        foreach (var check in PacketDirectionChecks.ClientChecks())
+            checks[check.Key] = check.Value;
         return checks;
     }
 }

@@ -132,6 +132,9 @@ public sealed class ServerValidationSystem : ModSystem
         _beforeSeed = Main.ActiveWorldFileData.SeedText;
         if (_beforeSeed == context.ExpectedSeed.ToString()) throw new InvalidOperationException("Regeneration seed must differ from initial seed.");
 
+        foreach (var check in PacketDirectionChecks.ServerChecks())
+            Check(check.Key, check.Value, "Production packet receive-direction regression.");
+
         // Use actual Terraria globals and the production capture/apply implementation.
         Main.hardMode = false;
         Main.GameMode = 1;

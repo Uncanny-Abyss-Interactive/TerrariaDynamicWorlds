@@ -415,26 +415,38 @@ namespace DynamicWorlds
                     break;
 
                 case DynamicWorldsPacketType.SyncAnchorDelta:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     DynamicWorldsNet.ApplyAnchorDeltaFromServer(reader);
                     break;
 
                 case DynamicWorldsPacketType.SyncEraseDelta:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     DynamicWorldsNet.ApplyEraseDeltaFromServer(reader);
                     break;
 
                 case DynamicWorldsPacketType.SyncStructureZoneUpsert:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     DynamicWorldsNet.ApplyStructureZoneUpsertFromServer(reader);
                     break;
 
                 case DynamicWorldsPacketType.SyncStructureZoneRemove:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     StructureAnchorSystem.RemoveSyncedZone(reader.ReadInt32());
                     break;
 
                 case DynamicWorldsPacketType.SyncBiomeZoneUpsert:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     DynamicWorldsNet.ApplyBiomeZoneUpsertFromServer(reader);
                     break;
 
                 case DynamicWorldsPacketType.SyncBiomeZoneRemove:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     BiomeDowserSystem.RemoveSyncedZone(reader.ReadInt32());
                     break;
 
@@ -661,6 +673,8 @@ namespace DynamicWorlds
                     break;
 
                 case DynamicWorldsPacketType.ShowMessage:
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        break;
                     string messageText = reader.ReadString();
                     Color messageColor = new Color(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
                     if (!Main.dedServ)
