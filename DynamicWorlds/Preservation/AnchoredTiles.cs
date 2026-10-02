@@ -383,6 +383,10 @@ namespace DynamicWorlds
         //  Moon Lord            +35,000   → 100,000
         public static int GetTileCap()
         {
+            int configuredCap = Math.Clamp(ModContent.GetInstance<DynamicWorldsConfig>().AnchorTileCapOverride, 0, 1_000_000);
+            if (configuredCap > 0)
+                return configuredCap;
+
             int cap = 5_000;
 
             if (NPC.downedSlimeKing)      cap +=    500;
@@ -406,6 +410,10 @@ namespace DynamicWorlds
 
             return cap;
         }
+
+        internal static string GetCapHint() => ModContent.GetInstance<DynamicWorldsConfig>().AnchorTileCapOverride > 0
+            ? "Raise Anchor Tile Cap Override in the server config to expand the limit."
+            : "Defeat more bosses to expand your limit.";
 
         // Anchor a tile (add only — used during drag)
         public static void AnchorTile(int x, int y)
@@ -451,7 +459,7 @@ namespace DynamicWorlds
                 int cap = GetTileCap();
                 if (AnchoredTiles.Count >= cap)
                 {
-                    Main.NewText($"Anchor cap reached ({cap}). Defeat more bosses to expand your limit.", 255, 200, 80);
+                    Main.NewText($"Anchor cap reached ({cap}). {GetCapHint()}", 255, 200, 80);
                     return;
                 }
 
@@ -536,7 +544,7 @@ namespace DynamicWorlds
                 if (blockedByZones > 0)
                     Main.NewText($"{blockedByZones} tile{(blockedByZones == 1 ? "" : "s")} skipped — structure zones already protect those spaces.", 255, 140, 100);
                 if (skipped > 0)
-                    Main.NewText($"{skipped} tile{(skipped == 1 ? "" : "s")} skipped — anchor cap reached. Defeat more bosses to expand your limit.", 255, 200, 80);
+                    Main.NewText($"{skipped} tile{(skipped == 1 ? "" : "s")} skipped — anchor cap reached. {GetCapHint()}", 255, 200, 80);
             }
 
             return new AnchorRectangleResult(
@@ -958,7 +966,7 @@ namespace DynamicWorlds
             // ── Cap warning ───────────────────────────────────────────────
             if (count >= cap)
                 tooltips.Add(new TooltipLine(Mod, "AnchorCapWarning",
-                    "⚠ Cap reached! Defeat more bosses to unlock more slots.")
+                    $"⚠ Cap reached! {AnchoredTileSystem.GetCapHint()}")
                     { OverrideColor = Color.Orange });
 
             // ── Bed / spawn hint ──────────────────────────────────────────

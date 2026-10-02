@@ -43,6 +43,23 @@ CLIENT_CHECKS.update("microfix.packet_" + name for name in (
     "client_biome_upsert", "client_biome_remove", "client_ignores_requests_before_body",
     "client_truncated_sync_is_atomic", "singleplayer_ignores_sync_before_body"))
 
+SERVER_CHECKS.update({
+    'microfix.anchor_checks_completed',
+    'microfix.anchor_fixture_state_restored',
+    'microfix.anchor_full_rectangle_is_idempotent',
+    'microfix.anchor_legacy_config_defaults_to_progression',
+    'microfix.anchor_lowering_preserves_saved_anchors',
+    'microfix.anchor_lowering_retains_existing',
+    'microfix.anchor_over_limit_removal_allowed',
+    'microfix.anchor_override_clamped',
+    'microfix.anchor_override_exceeds_progression_limit',
+    'microfix.anchor_positive_override_is_exact',
+    'microfix.anchor_rectangle_honors_override',
+    'microfix.anchor_removal_frees_capacity',
+    'microfix.anchor_untrusted_config_change_rejected',
+    'microfix.anchor_zero_preserves_boss_progression',
+})
+
 
 class LiveValidationError(RuntimeError):
     pass

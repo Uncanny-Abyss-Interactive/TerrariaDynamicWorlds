@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Terraria;
 using Terraria.ID;
@@ -36,6 +37,10 @@ namespace DynamicWorlds
 		public bool AllowCheats = true;
 
 		public bool RegenOnDeath = false;
+
+		[DefaultValue(0)]
+		[Range(0, 1_000_000)]
+		public int AnchorTileCapOverride = 0;
 
 		// Chat/debug logging
 		public bool BiomeDowserRegenChatLog = false;
