@@ -60,6 +60,22 @@ SERVER_CHECKS.update({
     'microfix.anchor_zero_preserves_boss_progression',
 })
 
+CLIENT_CHECKS.update({
+    'microfix.tools_checks_completed',
+    'microfix.tools_disabled_creates_no_dropped_gifts',
+    'microfix.tools_disabled_creates_no_inventory_gifts',
+    'microfix.tools_disabled_for_real_regeneration',
+    'microfix.tools_disabled_keeps_existing_tools',
+    'microfix.tools_disabled_manual_command_gives_five',
+    'microfix.tools_explicit_false_survives_config_save_reload',
+    'microfix.tools_fixture_inventory_restored',
+    'microfix.tools_fresh_config_enabled',
+    'microfix.tools_legacy_config_defaults_enabled',
+    'microfix.tools_missing_auto_gifts_all_four',
+    'microfix.tools_repeat_entry_does_not_duplicate',
+    'microfix.tools_disabled_setting_survived_regeneration',
+})
+
 
 class LiveValidationError(RuntimeError):
     pass

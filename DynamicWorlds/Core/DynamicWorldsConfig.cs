@@ -38,6 +38,9 @@ namespace DynamicWorlds
 
 		public bool RegenOnDeath = false;
 
+		[DefaultValue(true)]
+		public bool AutoGiveTools = true;
+
 		[DefaultValue(0)]
 		[Range(0, 1_000_000)]
 		public int AnchorTileCapOverride = 0;

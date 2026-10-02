@@ -43,7 +43,7 @@ For development builds and automatic Git-to-tModLoader deployment, see the
 
 ## Quick Start
 
-1. Enter a world. Dynamic Worlds automatically gifts you the four core preservation tools if you do not already have them.
+1. Enter a world. With `Automatically Give Tools` enabled (the default), Dynamic Worlds supplies the four core preservation tools if you do not already have them.
 2. Use `Reality Anchor` for exact tiles you never want to lose.
 3. Use `Structure Anchor` for houses, bases, and large builds you want moved onto the new terrain as a unit.
 4. Use `Reality Eraser` anywhere you always want cleared out after regen.
@@ -158,7 +158,7 @@ Compatibility is weaker for:
 
 ## World Tools
 
-All four preservation tools are auto-gifted on first world entry. You can also get them again with `/dwtools` or individually with `/dwtool`.
+By default, entering a world supplies any missing preservation tools. Disable `Automatically Give Tools` to opt out. You can also get them with `/dwtools` or individually with `/dwtool`, subject to the configured permissions.
 
 Holding any one of the three tools shows all saved world overlays at once:
 
@@ -553,6 +553,10 @@ If that path is unavailable, the mod falls back to:
 ```text
 tModLoader/DynamicWorlds/WorldProgress.json
 ```
+
+## Optional tool gifts
+
+`Automatically Give Tools` is enabled by default and supplies missing preservation tools whenever a player enters a world. Disable it in the server config to opt out. Existing tools remain, and `/dwtools` still works under the configured tool-command permissions.
 
 ## Build Notes
 
