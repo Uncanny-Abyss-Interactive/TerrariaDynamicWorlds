@@ -86,6 +86,7 @@ public sealed class ClientSmokeSystem : ModSystem
     private int _worldLoadsAfterRequest;
     private int _updates;
     private int _renderedFrames;
+    private Dictionary<string, bool> _toolGiftChecks = new();
 
     private static bool IsClientRun => !Main.dedServ &&
         Environment.GetEnvironmentVariable("DW_VALIDATION_MODE") == "client";
@@ -192,6 +193,7 @@ public sealed class ClientSmokeSystem : ModSystem
 
     private void RequestRegeneration()
     {
+        _toolGiftChecks = ToolGiftChecks.BeforeRegeneration();
         _initialSeed = Main.ActiveWorldFileData.SeedText;
         var checks = new Dictionary<string, bool>
         {
@@ -200,6 +202,8 @@ public sealed class ClientSmokeSystem : ModSystem
             ["initial_unprotected_sentinel_present"] = !FixtureAssertions.VerifyUnprotectedSentinelRemoved(),
             ["singleplayer"] = Main.netMode == NetmodeID.SinglePlayer
         };
+        foreach (var check in _toolGiftChecks)
+            checks[check.Key] = check.Value;
         if (!checks.Values.All(value => value))
         {
             Complete(false, checks, "Initial saved fixtures are invalid: " + structureDetail);
@@ -276,6 +280,10 @@ public sealed class ClientSmokeSystem : ModSystem
         {
             foreach (var check in MicrofixChecks.ClientChecks())
                 checks[check.Key] = check.Value;
+            foreach (var check in _toolGiftChecks)
+                checks[check.Key] = check.Value;
+            checks["microfix.tools_disabled_setting_survived_regeneration"] =
+                !ModContent.GetInstance<DynamicWorldsConfig>().AutoGiveTools;
             int chestIndex = Chest.FindChest(250, 110);
             checks["saved_anchor_chest_reloaded"] = chestIndex >= 0 &&
                 Main.chest[chestIndex]?.item[0]?.type == ItemID.Torch &&

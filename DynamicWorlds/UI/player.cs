@@ -35,28 +35,31 @@ namespace DynamicWorlds
 
         public override void OnEnterWorld()
         {
-            // Gift Reality Anchor if not already in inventory
-            int anchorType = ModContent.ItemType<RealityAnchor>();
-            bool hasAnchor = Player.inventory.Any(i => i != null && i.type == anchorType);
-            if (!hasAnchor)
-                Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), anchorType);
+            if (ModContent.GetInstance<DynamicWorldsConfig>().AutoGiveTools)
+            {
+                // Gift Reality Anchor if not already in inventory
+                int anchorType = ModContent.ItemType<RealityAnchor>();
+                bool hasAnchor = Player.inventory.Any(i => i != null && i.type == anchorType);
+                if (!hasAnchor)
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), anchorType);
 
-            // Gift Reality Eraser if not already in inventory
-            int eraserType = ModContent.ItemType<RealityEraser>();
-            bool hasEraser = Player.inventory.Any(i => i != null && i.type == eraserType);
-            if (!hasEraser)
-                Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), eraserType);
+                // Gift Reality Eraser if not already in inventory
+                int eraserType = ModContent.ItemType<RealityEraser>();
+                bool hasEraser = Player.inventory.Any(i => i != null && i.type == eraserType);
+                if (!hasEraser)
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), eraserType);
 
-            // Gift one Structure Anchor if not already in inventory
-            int baType = ModContent.ItemType<StructureAnchorItem>();
-            bool hasBA = Player.inventory.Any(i => i != null && i.type == baType);
-            if (!hasBA)
-                Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), baType);
+                // Gift one Structure Anchor if not already in inventory
+                int baType = ModContent.ItemType<StructureAnchorItem>();
+                bool hasBA = Player.inventory.Any(i => i != null && i.type == baType);
+                if (!hasBA)
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), baType);
 
-            int dowserType = ModContent.ItemType<BiomeDowser>();
-            bool hasDowser = Player.inventory.Any(i => i != null && i.type == dowserType);
-            if (!hasDowser)
-                Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), dowserType);
+                int dowserType = ModContent.ItemType<BiomeDowser>();
+                bool hasDowser = Player.inventory.Any(i => i != null && i.type == dowserType);
+                if (!hasDowser)
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), dowserType);
+            }
 
             if (DynamicWorldRegenSystem.TryHandlePostRegenEnter(Player))
                 return;
