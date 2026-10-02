@@ -54,6 +54,8 @@ jobs:
         if: steps.tip.outputs.current == 'true'
         env:
           PYTHONUNBUFFERED: '1'
+          # Native ARM64 .NET 8 avoids Rosetta failures in the bundled x64 host.
+          DW_DOTNET: /usr/local/share/dotnet/dotnet
         run: python3 scripts/deploy.py --commit "$GITHUB_SHA" --artifacts-dir artifacts
 
       - name: Retain package and build evidence

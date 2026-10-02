@@ -17,8 +17,9 @@ installation is a separate local setup step described below.
    commit is queued.
 3. Exports the selected Git commit to a temporary source folder. Uncommitted
    files in the developer checkout are never used or overwritten.
-4. Compiles and packages with the installed tModLoader's bundled runtime and
-   internal compiler, using an isolated save directory.
+4. Compiles and packages with the installed tModLoader's internal compiler,
+   using an isolated save directory. This Mac uses its native ARM64 .NET 8
+   runtime to avoid Rosetta failures in tModLoader's bundled x64 runtime.
 5. Verifies the resulting `DynamicWorlds.tmod`. A failed build leaves the
    installed mod untouched.
 6. Checks that tModLoader is closed, backs up the installed package, then
@@ -37,8 +38,8 @@ Run these at the repository root using Python 3:
 
 ```sh
 python3 -m unittest discover -s tests -v
-python3 scripts/deploy.py --commit HEAD --build-only
-python3 scripts/deploy.py --commit HEAD
+python3 scripts/deploy.py --commit HEAD --dotnet /usr/local/share/dotnet/dotnet --build-only
+python3 scripts/deploy.py --commit HEAD --dotnet /usr/local/share/dotnet/dotnet
 ```
 
 `--build-only` produces an artifact without installing it. `--commit` also
@@ -49,7 +50,9 @@ need not produce identical bytes.
 
 Paths can be overridden with `--tml-dir`, `--saves-dir`, `--state-dir`, and
 `--artifacts-dir`, or `DW_TML_DIR`, `DW_SAVES_DIR`, `DW_DEPLOY_STATE_DIR`, and
-`DW_ARTIFACTS_DIR`.
+`DW_ARTIFACTS_DIR`. Use `--dotnet` or `DW_DOTNET` to select a compatible .NET 8
+runtime; without an override the bundled runtime is used. Patch roll-forward
+allows installed 8.0.x servicing updates without switching major versions.
 
 Default macOS locations:
 

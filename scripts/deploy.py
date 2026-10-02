@@ -39,6 +39,7 @@ class Settings:
     state_dir: Path
     artifacts_dir: Path
     build_only: bool = False
+    dotnet: Path | None = None
 
 
 def sha256(path: Path) -> str:
@@ -154,13 +155,21 @@ def validate_tmod(path: Path, expected_version: str) -> dict[str, str]:
     return {"mod_version": version, "tmodloader_version": tml_version}
 
 
+def dotnet_runtime(settings: Settings) -> Path:
+    return (settings.dotnet or settings.tml_dir / "dotnet" / "dotnet").resolve()
+
+
 def build_mod(settings: Settings, source: Path, stage: Path, log: Path) -> Path:
-    runtime = settings.tml_dir / "dotnet" / "dotnet"
+    runtime = dotnet_runtime(settings)
     loader = settings.tml_dir / "tModLoader.dll"
     if not runtime.is_file() or not os.access(runtime, os.X_OK) or not loader.is_file():
-        raise DeploymentError(f"tModLoader and its executable bundled runtime were not found in {settings.tml_dir}. Set --tml-dir.")
+        raise DeploymentError(f"tModLoader or the executable runtime {runtime} was not found. Set --tml-dir and, if needed, --dotnet.")
     environment = os.environ.copy()
-    environment["DOTNET_ROLL_FORWARD"] = "Disable"
+    # Allow servicing updates within the required .NET major/minor version.
+    environment["DOTNET_ROLL_FORWARD"] = "LatestPatch"
+    # -build exits before tML's dedicated-server graphics initialization.
+    # Select the headless backend before PNG conversion starts worker threads.
+    environment["FNA_PLATFORM_BACKEND"] = "NONE"
     environment["DYLD_LIBRARY_PATH"] = str(settings.tml_dir / "Libraries" / "Native" / "OSX")
     args = [str(runtime), "tModLoader.dll", "-server", "-build", str(source),
             "-tmlsavedirectory", str(stage)]
@@ -315,14 +324,20 @@ def run(settings: Settings) -> dict:
             source = archive_source(settings.repo, commit, temporary_dir)
             version = source_version(source)
             loader_hash = sha256(settings.tml_dir / "tModLoader.dll")
+            runtime = dotnet_runtime(settings)
+            runtime_hash = sha256(runtime)
             built = build_mod(settings, source, temporary_dir / "tml-stage", log)
             package = validate_tmod(built, version)
             if sha256(settings.tml_dir / "tModLoader.dll") != loader_hash:
                 raise DeploymentError("tModLoader changed during the build; retry after its update finishes.")
+            if sha256(runtime) != runtime_hash:
+                raise DeploymentError("The dotnet executable changed during the build; retry after its update finishes.")
             artifact = run_dir / f"{MOD_NAME}.tmod"
             shutil.copy2(built, artifact)
         receipt = dict(package, git_sha=commit, artifact_sha256=sha256(artifact),
                        tmodloader_dll_sha256=loader_hash, artifact_path=str(artifact),
+                       dotnet_path=str(runtime), dotnet_sha256=runtime_hash,
+                       dotnet_roll_forward="LatestPatch",
                        built_at=datetime.now(timezone.utc).isoformat())
         write_json(run_dir / "build.json", receipt)
         if not settings.build_only:
@@ -341,6 +356,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--commit", default="HEAD", help="Git revision to archive and build (default: HEAD)")
     parser.add_argument("--build-only", action="store_true", help="Verify a package without installing it")
     parser.add_argument("--tml-dir", type=Path, default=Path(os.environ.get("DW_TML_DIR", home / "Library/Application Support/Steam/steamapps/common/tModLoader")))
+    parser.add_argument("--dotnet", type=Path, default=os.environ.get("DW_DOTNET"),
+                        help="dotnet executable (default: DW_DOTNET or tModLoader's bundled runtime)")
     parser.add_argument("--saves-dir", type=Path, default=Path(os.environ.get("DW_SAVES_DIR", home / "Library/Application Support/Terraria/tModLoader")))
     parser.add_argument("--state-dir", type=Path, default=Path(os.environ.get("DW_DEPLOY_STATE_DIR", home / "Library/Application Support/DynamicWorldsDeploy")))
     parser.add_argument("--artifacts-dir", type=Path, default=Path(os.environ.get("DW_ARTIFACTS_DIR", "artifacts")))
@@ -348,7 +365,8 @@ def main(argv: list[str] | None = None) -> int:
     repo = Path(__file__).resolve().parents[1]
     settings = Settings(repo, args.commit, args.tml_dir.expanduser().resolve(),
                         args.saves_dir.expanduser().resolve(), args.state_dir.expanduser().resolve(),
-                        args.artifacts_dir.expanduser().resolve(), args.build_only)
+                        args.artifacts_dir.expanduser().resolve(), args.build_only,
+                        args.dotnet.expanduser().resolve() if args.dotnet else None)
     try:
         run(settings)
     except (DeploymentError, OSError, subprocess.SubprocessError, tarfile.TarError) as exc:

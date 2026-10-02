@@ -97,7 +97,8 @@ class DeployTests(unittest.TestCase):
     def test_build_only_builds_committed_source_and_never_touches_live_state(self):
         source, commit = self.create_repo()
         (source / "Example.cs").write_text("// dirty working tree\n")
-        runtime = self.settings.tml_dir / "dotnet/dotnet"
+        runtime = self.root / "native-dotnet/dotnet"
+        self.settings.dotnet = runtime
         runtime.parent.mkdir()
         runtime.write_text(
             f"#!{sys.executable}\n"
@@ -106,7 +107,7 @@ class DeployTests(unittest.TestCase):
             "source = Path(sys.argv[4])\n"
             "assert (source / 'Example.cs').read_text() == '// committed source\\n'\n"
             "assert sys.argv[5] == '-tmlsavedirectory'\n"
-            "assert os.environ['DOTNET_ROLL_FORWARD'] == 'Disable'\n"
+            "assert os.environ['DOTNET_ROLL_FORWARD'] == 'LatestPatch'\n"
             "mods = Path(sys.argv[6]) / 'Mods'\nmods.mkdir(parents=True)\n"
             f"(mods / 'DynamicWorlds.tmod').write_bytes({package_bytes()!r})\n"
             "print('fake build finished')\n"
@@ -123,6 +124,9 @@ class DeployTests(unittest.TestCase):
         self.assertEqual(receipt["git_sha"], commit)
         self.assertEqual(receipt["mod_version"], "0.5.0")
         self.assertEqual(receipt["tmodloader_dll_sha256"], deploy.sha256(self.settings.tml_dir / "tModLoader.dll"))
+        self.assertEqual(receipt["dotnet_path"], str(runtime.resolve()))
+        self.assertEqual(receipt["dotnet_sha256"], deploy.sha256(runtime))
+        self.assertEqual(receipt["dotnet_roll_forward"], "LatestPatch")
         self.assertEqual(receipt["artifact_sha256"], deploy.sha256(Path(receipt["artifact_path"])))
         self.assertEqual(before, {str(path): path.read_bytes() for path in self.settings.saves_dir.rglob("*") if path.is_file()})
         self.assertEqual((self.settings.state_dir / "current.json").read_bytes(), receipt_before)
